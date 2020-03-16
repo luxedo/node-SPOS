@@ -1,0 +1,29 @@
+{
+  "name": "spos",
+  "version": "1.0.0-alpha.0",
+  "description": "SPOS stands for Small Payload Object Serializer",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luxedo/node-SPOS.git"
+  },
+  "keywords": [
+    "serializer",
+    "LoRa",
+    "Globalstar",
+    "low-bandwidth"
+  ],
+  "author": "Luiz Eduardo Amaral",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/luxedo/node-SPOS/issues"
+  },
+  "homepage": "https://github.com/luxedo/node-SPOS#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^7.1.0"
+  }
+}
