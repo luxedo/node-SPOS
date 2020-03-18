@@ -19,17 +19,21 @@ module.exports.decoders = {
     return message == "1";
   },
   decodeBinary: message => {
-    return message
-  }, 
+    return message;
+  },
   decodeInteger: (message, block) => {
-    return block.settings.offset + parseInt(message, 2)
+    return block.settings.offset + parseInt(message, 2);
   },
   decodeFloat: (message, block) => {
-    const bits = block.settings.bits
-    const upper = block.settings.upper
-    const lower = block.settings.lower
-    const delta = upper - lower
-    const overflow = Math.pow(2, bits) - 1
-    return parseInt(message, 2) * delta / overflow + lower
-  }
+    const bits = block.settings.bits;
+    const upper = block.settings.upper;
+    const lower = block.settings.lower;
+    const delta = upper - lower;
+    const overflow = Math.pow(2, bits) - 1;
+    return (parseInt(message, 2) * delta) / overflow + lower;
+  },
+  decodePad: message => {
+    return message.length;
+  },
+  decodeArray: (message, block) => {}
 };

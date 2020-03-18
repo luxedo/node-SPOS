@@ -49,5 +49,9 @@ module.exports.encoders = {
     value = (overflow * (value - lower)) / delta;
     value = approximation(Math.min(overflow, Math.max(0, value)));
     return value.toString(2).padStart(block.settings.bits, "0");
-  }
+  },
+  encodePad: (value, block) => {
+    return "".padStart(block.settings.bits, "1");
+  },
+  decodeArray: (value, block) => {}
 };

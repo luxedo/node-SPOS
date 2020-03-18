@@ -83,9 +83,9 @@ describe("validateMessage", () => {
   });
 });
 
-describe("encodeBlock", () => {
-  describe("encodeBoolean", () => {
-    it("Encodes true to '1' and vice versa.", () => {
+describe("Encodes/Decodes Block", () => {
+  describe("Encodes/Decodes Boolean", () => {
+    it("Encodes/Decodes true to '1' and vice versa.", () => {
       const block = {
         name: "boolean true",
         type: "boolean"
@@ -95,7 +95,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes false to '0' and vice versa.", () => {
+    it("Encodes/Decodes false to '0' and vice versa.", () => {
       const block = {
         name: "boolean false",
         type: "boolean"
@@ -107,8 +107,8 @@ describe("encodeBlock", () => {
     });
   });
 
-  describe("encodeBinary", () => {
-    it("Encodes a binary block", () => {
+  describe("Encodes/Decodes Binary", () => {
+    it("Encodes/Decodes a binary block", () => {
       const block = {
         name: "encode binary",
         type: "binary",
@@ -120,7 +120,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), t);
       assert.equal(spos.decodeBlock(t, block), t);
     });
-    it("Encodes an hex block", () => {
+    it("Encodes/Decodes an hex block", () => {
       const block = {
         name: "encode binary",
         type: "binary",
@@ -183,8 +183,8 @@ describe("encodeBlock", () => {
     });
   });
 
-  describe("encodeInteger", () => {
-    it("Encodes an integer.", () => {
+  describe("Encodes/Decodes Integer", () => {
+    it("Encodes/Decodes an integer.", () => {
       const block = {
         name: "integer",
         type: "integer",
@@ -197,7 +197,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes an integer with offset.", () => {
+    it("Encodes/Decodes an integer with offset.", () => {
       const block = {
         name: "integer offset",
         type: "integer",
@@ -211,7 +211,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes an integer without overflowing.", () => {
+    it("Encodes/Decodes an integer without overflowing.", () => {
       const block = {
         name: "integer offset",
         type: "integer",
@@ -225,7 +225,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t_dec);
     });
-    it("Encodes an integer without underflowing.", () => {
+    it("Encodes/Decodes an integer without underflowing.", () => {
       const block = {
         name: "integer offset",
         type: "integer",
@@ -242,8 +242,8 @@ describe("encodeBlock", () => {
     });
   });
 
-  describe("encodeFloat", () => {
-    it("Encodes a float value", () => {
+  describe("Encodes/Decodes Float", () => {
+    it("Encodes/Decodes a float value", () => {
       const block = {
         name: "float",
         type: "float",
@@ -256,7 +256,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes a float with floor approximation.", () => {
+    it("Encodes/Decodes a float with floor approximation.", () => {
       const block = {
         name: "float floor",
         type: "float",
@@ -271,7 +271,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
-    it("Encodes a float with ceil approximation.", () => {
+    it("Encodes/Decodes a float with ceil approximation.", () => {
       const block = {
         name: "float ceil",
         type: "float",
@@ -286,7 +286,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
-    it("Encodes a float with upper boundary.", () => {
+    it("Encodes/Decodes a float with upper boundary.", () => {
       const block = {
         name: "float",
         type: "float",
@@ -300,7 +300,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes a float with lower boundary.", () => {
+    it("Encodes/Decodes a float with lower boundary.", () => {
       const block = {
         name: "float",
         type: "float",
@@ -315,7 +315,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes a float without overflowing.", () => {
+    it("Encodes/Decodes a float without overflowing.", () => {
       const block = {
         name: "float",
         type: "float",
@@ -330,7 +330,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes a float without overflowing.", () => {
+    it("Encodes/Decodes a float without overflowing.", () => {
       const block = {
         name: "float",
         type: "float",
@@ -344,7 +344,7 @@ describe("encodeBlock", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
-    it("Encodes a float without underflowing.", () => {
+    it("Encodes/Decodes a float without underflowing.", () => {
       const block = {
         name: "float",
         type: "float",
@@ -359,4 +359,69 @@ describe("encodeBlock", () => {
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
   });
+
+  describe("Encodes/Decodes Pad", () => {
+    it("Pads message with length 2", () => {
+      const block = {
+        name: "pad 2",
+        type: "pad",
+        settings: {
+          bits: 2
+        }
+      };
+      const a = "11";
+      assert.equal(spos.encodeBlock(null, block), a);
+      assert.equal(spos.decodeBlock(a, block), a.length);
+    });
+    it("Pads message with length 6", () => {
+      const block = {
+        name: "pad 6",
+        type: "pad",
+        settings: {
+          bits: 6
+        }
+      };
+      const a = "111111";
+      assert.equal(spos.encodeBlock(null, block), a);
+      assert.equal(spos.decodeBlock(a, block), a.length);
+    });
+  });
+
+  describe("Encodes/Decodes Array", () => {
+    //it("Encodes/Decodes an array", () => {
+    //  const block = {
+    //    name: "array",
+    //    type: "array",
+    //    settings: {
+    //      bits: 8,
+    //      blocks: {
+    //        name: "array value",
+    //        type: "integer",
+    //        settings: {
+    //          bits: 6
+    //        }
+    //      }
+    //    }
+    //  };
+    //  const a = "11";
+    //  assert.equal(spos.encodeBlock(null, block), a);
+    //  assert.equal(spos.decodeBlock(a, block), a.length);
+    //});
+    // it("Pads message with length 6", () => {
+    //   const block = {
+    //     name: "pad 6",
+    //     type: "pad",
+    //     settings: {
+    //       bits: 6
+    //     }
+    //   };
+    //   const a = "111111"
+    //   assert.equal(spos.encodeBlock(null, block), a);
+    //   assert.equal(spos.decodeBlock(a, block), a.length);
+    // });
+  });
+  // def test_array_block(self):
+  // def test_array_truncate(self):
+  // def test_array_empty(self):
+  // def test_array_nested(self):
 });

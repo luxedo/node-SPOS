@@ -35,11 +35,16 @@ const TYPES_SETTINGS = {
   float: {
     required: {
       bits: "number"
-    }, 
+    },
     optional: {
-      upper: {type: "number", default: 1},
-      lower: {type: "number", default: 0},
-      approximation: {type: "string", default: "round"}
+      upper: { type: "number", default: 1 },
+      lower: { type: "number", default: 0 },
+      approximation: { type: "string", default: "round" }
+    }
+  },
+  pad: {
+    required: {
+      bits: "number"
     }
   }
 };
@@ -64,6 +69,16 @@ const TYPES = {
     input: Number,
     encoder: encoders.encodeFloat,
     decoder: decoders.decodeFloat
+  },
+  pad: {
+    encoder: encoders.encodePad,
+    decoder: decoders.decodePad
+  },
+  array: {
+    input: "block",
+    validator: validators.validateArray,
+    encoder: encoders.encodeArray,
+    decoder: decoders.decodeArray
   }
 };
 
@@ -104,8 +119,7 @@ function validateBlock(block) {
     for (const [key, value] of Object.entries(type_settings.optional)) {
       if (!(key in block.settings)) {
         block.settings[key] = value.default;
-      }
-      else if (!(typeof block.settings[key] == value.type))
+      } else if (!(typeof block.settings[key] == value.type))
         throw RangeError(
           `Block ${block.name} settings.${key} must be of type ${value}`
         );
@@ -114,7 +128,7 @@ function validateBlock(block) {
     }
   }
 
-  return block
+  return block;
 }
 
 function validateValue(value, type) {
@@ -132,7 +146,7 @@ function validateMessage(message) {
 function encodeBlock(value, block) {
   block = validateBlock(block);
   const type = TYPES[block.type];
-  validateValue(value, type);
+  if ("input" in type) validateValue(value, type);
   return type.encoder(value, block);
 }
 
