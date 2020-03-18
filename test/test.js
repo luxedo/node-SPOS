@@ -19,53 +19,46 @@ const spos = require("spos");
 const DELTA = 0.01;
 
 describe("validateBlock", () => {
-  it("Throws an exception when passing a block without name.", () => {
+  it("Throws an exception when passing a block without key", () => {
     const block = {
       type: "boolean"
     };
     assert.throws(() => spos.encodeBlock(true, block), ReferenceError);
   });
-  it("Throws an exception when passing a block without type.", () => {
+  it("Throws an exception when passing a block without type", () => {
     const block = {
       type: "boolean"
     };
     assert.throws(() => spos.encodeBlock(true, block), ReferenceError);
   });
-  it("Throws an exception when passing a block with an unknown type.", () => {
+  it("Throws an exception when passing a block with an unknown type", () => {
     const block = {
-      name: "test",
+      key: "test",
       type: "unknown"
     };
     assert.throws(() => spos.encodeBlock(true, block), RangeError);
   });
-  it("Throws an exception when missing the settings argument.", () => {
+  it("Throws an exception when missing a required key", () => {
     const block = {
-      name: "test",
+      key: "test",
       type: "binary"
     };
     assert.throws(() => spos.encodeBlock("0101", block), ReferenceError);
   });
-  it("Throws an exception when missing a key in a required settings argument.", () => {
+  it("Throws an exception when the type of a required key is invalid", () => {
     const block = {
-      name: "test",
+      key: "test",
       type: "binary",
-      settings: {}
-    };
-    assert.throws(() => spos.encodeBlock("0101", block), ReferenceError);
-  });
-  it("Throws an exception when the type of a required settings item is invalid.", () => {
-    const block = {
-      name: "test",
-      type: "binary",
-      settings: { bits: "err" }
+      bits: "err"
     };
     assert.throws(() => spos.encodeBlock("0101", block), RangeError);
   });
-  it("Throws an exception when the type of an optional settings item is invalid.", () => {
+  it("Throws an exception when the type of an optional key is invalid", () => {
     const block = {
-      name: "test",
+      key: "test",
       type: "integer",
-      settings: { bits: 6, offset: "err" }
+      bits: 6,
+      offset: "err"
     };
     assert.throws(() => spos.encodeBlock("0101", block), RangeError);
   });
@@ -74,9 +67,9 @@ describe("validateBlock", () => {
 describe("validateValue", () => {});
 
 describe("validateMessage", () => {
-  it("Throws an exception when passing a string that doesn't represent a binary.", () => {
+  it("Throws an exception when passing a string that doesn't represent a binary", () => {
     const block = {
-      name: "test",
+      key: "test",
       type: "boolean"
     };
     assert.throws(() => spos.decodeBlock("error", block), RangeError);
@@ -85,9 +78,9 @@ describe("validateMessage", () => {
 
 describe("Encodes/Decodes Block", () => {
   describe("Encodes/Decodes Boolean", () => {
-    it("Encodes/Decodes true to '1' and vice versa.", () => {
+    it("Encodes/Decodes true to '1' and vice versa", () => {
       const block = {
-        name: "boolean true",
+        key: "boolean true",
         type: "boolean"
       };
       const t = true;
@@ -95,9 +88,9 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes/Decodes false to '0' and vice versa.", () => {
+    it("Encodes/Decodes false to '0' and vice versa", () => {
       const block = {
-        name: "boolean false",
+        key: "boolean false",
         type: "boolean"
       };
       const t = false;
@@ -110,11 +103,9 @@ describe("Encodes/Decodes Block", () => {
   describe("Encodes/Decodes Binary", () => {
     it("Encodes/Decodes a binary block", () => {
       const block = {
-        name: "encode binary",
+        key: "encode binary",
         type: "binary",
-        settings: {
-          bits: 16
-        }
+        bits: 16
       };
       const t = "1010111010101011";
       assert.equal(spos.encodeBlock(t, block), t);
@@ -122,11 +113,9 @@ describe("Encodes/Decodes Block", () => {
     });
     it("Encodes/Decodes an hex block", () => {
       const block = {
-        name: "encode binary",
+        key: "encode binary",
         type: "binary",
-        settings: {
-          bits: 32
-        }
+        bits: 32
       };
       const t = "deadbeef";
       const a = "11011110101011011011111011101111";
@@ -135,11 +124,9 @@ describe("Encodes/Decodes Block", () => {
     });
     it("Truncates a binary value", () => {
       const block = {
-        name: "encode binary truncate",
+        key: "encode binary truncate",
         type: "binary",
-        settings: {
-          bits: 6
-        }
+        bits: 6
       };
       const t = "1010111010101011";
       const a = "101011";
@@ -147,11 +134,9 @@ describe("Encodes/Decodes Block", () => {
     });
     it("Truncates an hex value", () => {
       const block = {
-        name: "encode hex truncate",
+        key: "encode hex truncate",
         type: "binary",
-        settings: {
-          bits: 6
-        }
+        bits: 6
       };
       const t = "deadbeef";
       const a = "110111";
@@ -159,11 +144,9 @@ describe("Encodes/Decodes Block", () => {
     });
     it("Pads a binary value", () => {
       const block = {
-        name: "encode binary pad",
+        key: "encode binary pad",
         type: "binary",
-        settings: {
-          bits: 18
-        }
+        bits: 18
       };
       const t = "1010111010101011";
       const a = "001010111010101011";
@@ -171,11 +154,9 @@ describe("Encodes/Decodes Block", () => {
     });
     it("Pads an hex value", () => {
       const block = {
-        name: "encode hex pad",
+        key: "encode hex pad",
         type: "binary",
-        settings: {
-          bits: 34
-        }
+        bits: 34
       };
       const t = "deadbeef";
       const a = "0011011110101011011011111011101111";
@@ -184,40 +165,34 @@ describe("Encodes/Decodes Block", () => {
   });
 
   describe("Encodes/Decodes Integer", () => {
-    it("Encodes/Decodes an integer.", () => {
+    it("Encodes/Decodes an integer", () => {
       const block = {
-        name: "integer",
+        key: "integer",
         type: "integer",
-        settings: {
-          bits: 4
-        }
+        bits: 4
       };
       const t = 9;
       const a = "1001";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes/Decodes an integer with offset.", () => {
+    it("Encodes/Decodes an integer with offset", () => {
       const block = {
-        name: "integer offset",
+        key: "integer offset",
         type: "integer",
-        settings: {
-          bits: 6,
-          offset: 200
-        }
+        bits: 6,
+        offset: 200
       };
       const t = 210;
       const a = "001010";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes/Decodes an integer without overflowing.", () => {
+    it("Encodes/Decodes an integer without overflowing", () => {
       const block = {
-        name: "integer offset",
+        key: "integer offset",
         type: "integer",
-        settings: {
-          bits: 6
-        }
+        bits: 6
       };
       const t = 210;
       const a = "111111";
@@ -225,14 +200,12 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t_dec);
     });
-    it("Encodes/Decodes an integer without underflowing.", () => {
+    it("Encodes/Decodes an integer without underflowing", () => {
       const block = {
-        name: "integer offset",
+        key: "integer offset",
         type: "integer",
-        settings: {
-          bits: 6,
-          offset: 220
-        }
+        bits: 6,
+        offset: 220
       };
       const t = 210;
       const a = "000000";
@@ -245,25 +218,21 @@ describe("Encodes/Decodes Block", () => {
   describe("Encodes/Decodes Float", () => {
     it("Encodes/Decodes a float value", () => {
       const block = {
-        name: "float",
+        key: "float",
         type: "float",
-        settings: {
-          bits: 8
-        }
+        bits: 8
       };
       const t = 0.5;
       const a = "10000000";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes/Decodes a float with floor approximation.", () => {
+    it("Encodes/Decodes a float with floor approximation", () => {
       const block = {
-        name: "float floor",
+        key: "float floor",
         type: "float",
-        settings: {
-          bits: 2,
-          approximation: "floor"
-        }
+        bits: 2,
+        approximation: "floor"
       };
       const t = 0.5;
       const a = "01";
@@ -271,14 +240,12 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
-    it("Encodes/Decodes a float with ceil approximation.", () => {
+    it("Encodes/Decodes a float with ceil approximation", () => {
       const block = {
-        name: "float ceil",
+        key: "float ceil",
         type: "float",
-        settings: {
-          bits: 2,
-          approximation: "ceil"
-        }
+        bits: 2,
+        approximation: "ceil"
       };
       const t = 0.5;
       const a = "10";
@@ -286,57 +253,49 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
-    it("Encodes/Decodes a float with upper boundary.", () => {
+    it("Encodes/Decodes a float with upper boundary", () => {
       const block = {
-        name: "float",
+        key: "float",
         type: "float",
-        settings: {
-          bits: 8,
-          upper: 2
-        }
+        bits: 8,
+        upper: 2
       };
       const t = 1;
       const a = "10000000";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes/Decodes a float with lower boundary.", () => {
+    it("Encodes/Decodes a float with lower boundary", () => {
       const block = {
-        name: "float",
+        key: "float",
         type: "float",
-        settings: {
-          bits: 8,
-          upper: 0,
-          lower: -2
-        }
+        bits: 8,
+        upper: 0,
+        lower: -2
       };
       const t = -1;
       const a = "10000000";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes/Decodes a float without overflowing.", () => {
+    it("Encodes/Decodes a float without overflowing", () => {
       const block = {
-        name: "float",
+        key: "float",
         type: "float",
-        settings: {
-          bits: 8,
-          upper: 0,
-          lower: -2
-        }
+        bits: 8,
+        upper: 0,
+        lower: -2
       };
       const t = -1;
       const a = "10000000";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t, DELTA);
     });
-    it("Encodes/Decodes a float without overflowing.", () => {
+    it("Encodes/Decodes a float without overflowing", () => {
       const block = {
-        name: "float",
+        key: "float",
         type: "float",
-        settings: {
-          bits: 4
-        }
+        bits: 4
       };
       const t = 2;
       const a = "1111";
@@ -344,13 +303,11 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.closeTo(spos.decodeBlock(a, block), t_dec, DELTA);
     });
-    it("Encodes/Decodes a float without underflowing.", () => {
+    it("Encodes/Decodes a float without underflowing", () => {
       const block = {
-        name: "float",
+        key: "float",
         type: "float",
-        settings: {
-          bits: 4
-        }
+        bits: 4
       };
       const t = -1;
       const a = "0000";
@@ -363,11 +320,9 @@ describe("Encodes/Decodes Block", () => {
   describe("Encodes/Decodes Pad", () => {
     it("Pads message with length 2", () => {
       const block = {
-        name: "pad 2",
+        key: "pad 2",
         type: "pad",
-        settings: {
-          bits: 2
-        }
+        bits: 2
       };
       const a = "11";
       assert.equal(spos.encodeBlock(null, block), a);
@@ -375,11 +330,9 @@ describe("Encodes/Decodes Block", () => {
     });
     it("Pads message with length 6", () => {
       const block = {
-        name: "pad 6",
+        key: "pad 6",
         type: "pad",
-        settings: {
-          bits: 6
-        }
+        bits: 6
       };
       const a = "111111";
       assert.equal(spos.encodeBlock(null, block), a);
@@ -388,40 +341,218 @@ describe("Encodes/Decodes Block", () => {
   });
 
   describe("Encodes/Decodes Array", () => {
-    //it("Encodes/Decodes an array", () => {
-    //  const block = {
-    //    name: "array",
-    //    type: "array",
-    //    settings: {
-    //      bits: 8,
-    //      blocks: {
-    //        name: "array value",
-    //        type: "integer",
-    //        settings: {
-    //          bits: 6
-    //        }
-    //      }
-    //    }
-    //  };
-    //  const a = "11";
-    //  assert.equal(spos.encodeBlock(null, block), a);
-    //  assert.equal(spos.decodeBlock(a, block), a.length);
-    //});
-    // it("Pads message with length 6", () => {
-    //   const block = {
-    //     name: "pad 6",
-    //     type: "pad",
-    //     settings: {
-    //       bits: 6
-    //     }
-    //   };
-    //   const a = "111111"
-    //   assert.equal(spos.encodeBlock(null, block), a);
-    //   assert.equal(spos.decodeBlock(a, block), a.length);
-    // });
+    it("Encodes/Decodes an array", () => {
+      const block = {
+        key: "array",
+        type: "array",
+        bits: 8,
+        blocks: {
+          key: "array value",
+          type: "integer",
+          bits: 6
+        }
+      };
+      const t = [1, 2, 3];
+      const a = "00000011000001000010000011";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
+    it("Truncates an array large the maximum length", () => {
+      const block = {
+        key: "array",
+        type: "array",
+        bits: 2,
+        blocks: {
+          key: "array value",
+          type: "integer",
+          bits: 6
+        }
+      };
+      const t = [1, 2, 3, 4, 5];
+      const a = "11000001000010000011";
+      const t_dec = [1, 2, 3];
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes an empty array", () => {
+      const block = {
+        key: "array",
+        type: "array",
+        bits: 3,
+        blocks: {
+          key: "array value",
+          type: "integer",
+          bits: 6
+        }
+      };
+      const t = [];
+      const a = "000";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes a nested array", () => {
+      const block = {
+        key: "array",
+        type: "array",
+        bits: 4,
+        blocks: {
+          key: "nested array",
+          type: "array",
+          bits: 6,
+          blocks: {
+            key: "array value",
+            type: "integer",
+            bits: 6
+          }
+        }
+      };
+      const t = [
+        [1, 2],
+        [3, 4, 5]
+      ];
+      const a = "0010000010000001000010000011000011000100000101";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
   });
-  // def test_array_block(self):
-  // def test_array_truncate(self):
-  // def test_array_empty(self):
-  // def test_array_nested(self):
+
+  describe("Encodes/Decodes Object", () => {
+    it("Encodes/Decodes Object", () => {
+      const block = {
+        key: "object",
+        type: "object",
+        items: [
+          {
+            key: "hello",
+            type: "integer",
+            bits: 5
+          },
+          {
+            key: "catto",
+            type: "boolean"
+          }
+        ]
+      };
+      const t = {
+        hello: 14,
+        catto: false
+      };
+      const a = "011100";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes Nested Object", () => {
+      const block = {
+        key: "object",
+        type: "object",
+        items: [
+          {
+            key: "hello",
+            type: "integer",
+            bits: 5
+          },
+          {
+            key: "catto",
+            type: "boolean"
+          },
+          {
+            key: "neko",
+            type: "object",
+            items: [
+              {
+                key: "birds",
+                type: "integer",
+                bits: 4
+              }
+            ]
+          }
+        ]
+      };
+      const t = {
+        hello: 14,
+        catto: false,
+        neko: {
+          birds: 9
+        }
+      };
+      const a = "0111001001";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
+    it("Object RangeError", () => {
+      const block = {
+        key: "object",
+        type: "object",
+        items: [
+          {
+            key: "hello",
+            type: "integer",
+            bits: 5
+          },
+          {
+            key: "catto",
+            type: "boolean"
+          },
+          {
+            key: "neko",
+            type: "object",
+            items: [
+              {
+                key: "birds",
+                type: "integer",
+                bits: 4
+              }
+            ]
+          }
+        ]
+      };
+      const t = {
+        hello: 14,
+        catto: false
+      };
+      assert.throws(() => spos.encodeBlock(t, block), RangeError);
+    });
+  });
+  describe("Encodes/Decodes String", () => {
+    it("Encodes/Decodes String", () => {
+      const block = {
+        key: "message",
+        type: "string",
+        length: 12
+      };
+      const t = "my message";
+      const a = "111110111110100110110010111110100110011110101100101100011010100000011110"
+      const t_dec = "++my+message";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes String with an unknown character", () => {
+      const block = {
+        key: "message",
+        type: "string",
+        length: 12
+      };
+      const t = "my message%";
+      const a = "111110100110110010111110100110011110101100101100011010100000011110111111"
+      const t_dec = "+my+message/";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+
+    it("Encodes/Decodes String with a custom alphabeth", () => {
+      const block = {
+        key: "message",
+        type: "string",
+        length: 12,
+        custom_alphabeth: {
+          0: "%"  
+        }
+      };
+      const t = "my message%";
+      const a = "111110100110110010111110100110011110101100101100011010100000011110000000"
+      const t_dec = "+my+message%";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+  });
 });
