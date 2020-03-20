@@ -14,7 +14,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-module.exports.validators = {
-  validateBinary: value => {},
-  validateArray: value => {}
+const validators = {
+  validateBinary: (value, block)  => {
+    if (!(value.replace(/[0-9a-f]+/, "") == "" || value.replace(/[01]+/, "") == ""))
+      throw RangeError("Input must be a binary or an hex string.")
+  },
 };
+module.exports.validators = validators;

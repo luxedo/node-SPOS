@@ -18,6 +18,36 @@ const spos = require("spos");
 
 const DELTA = 0.01;
 
+assert.payload = (payloadSpec, payloadData, decoded) => {
+  assert.items(payloadSpec.items, payloadData, decoded);
+};
+
+assert.items = (items, payloadData, decoded) => {
+  for (let block of items) {
+    if ("value" in block) {
+      assert.equal(block.value, decoded[block.key]);
+    } else {
+      assert.block(block, payloadData[block.key], decoded[block.key]);
+    }
+  }
+};
+
+assert.block = (block, expected, actual) => {
+  if (block.type == "array") {
+    for (let i = 0; i < expected.length; i++) {
+      assert.block(block.blocks, expected[i], actual[i]);
+    }
+  } else if (block.type == "object") {
+    assert.items(block.items, expected, actual);
+  } else if (block.type == "float") {
+    block = spos.fillDefaults(block)
+    const delta = (block.upper - block.lower) / block.bits
+    assert.closeTo(expected, actual, delta)
+  } else {
+    assert.equal(expected, actual);
+  }
+};
+
 describe("validateBlock", () => {
   it("Throws an exception when passing a block without key", () => {
     const block = {
@@ -61,6 +91,16 @@ describe("validateBlock", () => {
       offset: "err"
     };
     assert.throws(() => spos.encodeBlock("0101", block), RangeError);
+  });
+  it("Throws an exception when the block as an unexpected key", () => {
+    const block = {
+      key: "test",
+      type: "integer",
+      bits: 6,
+      offset: 0,
+      error_key: true
+    };
+    assert.throws(() => spos.encodeBlock("0101", block), ReferenceError);
   });
 });
 
@@ -161,6 +201,15 @@ describe("Encodes/Decodes Block", () => {
       const t = "deadbeef";
       const a = "0011011110101011011011111011101111";
       assert.equal(spos.encodeBlock(t, block), a);
+    });
+    it("Throws an error when passing a malformed input", () => {
+      const block = {
+        key: "encode hex pad",
+        type: "binary",
+        bits: 34
+      };
+      const t = "error";
+      assert.throws(() => spos.encodeBlock(t, block), RangeError);
     });
   });
 
@@ -521,7 +570,8 @@ describe("Encodes/Decodes Block", () => {
         length: 12
       };
       const t = "my message";
-      const a = "111110111110100110110010111110100110011110101100101100011010100000011110"
+      const a =
+        "111110111110100110110010111110100110011110101100101100011010100000011110";
       const t_dec = "++my+message";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t_dec);
@@ -533,7 +583,8 @@ describe("Encodes/Decodes Block", () => {
         length: 12
       };
       const t = "my message%";
-      const a = "111110100110110010111110100110011110101100101100011010100000011110111111"
+      const a =
+        "111110100110110010111110100110011110101100101100011010100000011110111111";
       const t_dec = "+my+message/";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t_dec);
@@ -545,14 +596,280 @@ describe("Encodes/Decodes Block", () => {
         type: "string",
         length: 12,
         custom_alphabeth: {
-          0: "%"  
+          0: "%"
         }
       };
       const t = "my message%";
-      const a = "111110100110110010111110100110011110101100101100011010100000011110000000"
+      const a =
+        "111110100110110010111110100110011110101100101100011010100000011110000000";
       const t_dec = "+my+message%";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t_dec);
     });
   });
+  describe("Encodes/Decodes Steps", () => {
+    it("Encodes/Decodes Steps", () => {
+      const block = {
+        key: "steps",
+        type: "steps",
+        steps: [0, 5, 10],
+        steps_names: ["critical", "low", "charged", "full"]
+      };
+      const t = 2;
+      const a = "01";
+      const t_dec = "low";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes index 0", () => {
+      const block = {
+        key: "steps",
+        type: "steps",
+        steps: [0, 5, 10],
+        steps_names: ["critical", "low", "charged", "full"]
+      };
+      const t = -1;
+      const a = "00";
+      const t_dec = "critical";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes lower boundary", () => {
+      const block = {
+        key: "steps",
+        type: "steps",
+        steps: [0, 5, 10],
+        steps_names: ["critical", "low", "charged", "full"]
+      };
+      const t = 5;
+      const a = "10";
+      const t_dec = "charged";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes last index", () => {
+      const block = {
+        key: "steps",
+        type: "steps",
+        steps: [0, 5, 10],
+        steps_names: ["critical", "low", "charged", "full"]
+      };
+      const t = 11;
+      const a = "11";
+      const t_dec = "full";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Generates steps names if 'steps_names' is not provided.", () => {
+      const block = {
+        key: "steps",
+        type: "steps",
+        steps: [0, 5, 10]
+      };
+      const t = 1;
+      const a = "01";
+      const t_dec = "0<=x<5";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Throws an error if 'steps_names' doesn't have the correct length.", () => {
+      const block = {
+        key: "steps",
+        type: "steps",
+        steps: [0, 5, 10],
+        steps_names: ["one", "two"]
+      };
+      const t = 1;
+      assert.throws(() => spos.encodeBlock(t, block), RangeError);
+    });
+  });
+  describe("Encodes/Decodes Categories", () => {
+    it("Encodes/Decodes Categories 1", () => {
+      const block = {
+        key: "categories",
+        type: "categories",
+        categories: ["fighter", "wizard", "rogue"]
+      };
+      const t = "wizard";
+      const a = "01";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes Categories 2", () => {
+      const block = {
+        key: "categories",
+        type: "categories",
+        categories: ["fighter", "wizard", "rogue"]
+      };
+      const t = "fighter";
+      const a = "00";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes Categories 3", () => {
+      const block = {
+        key: "categories",
+        type: "categories",
+        categories: ["fighter", "wizard", "rogue"]
+      };
+      const t = "rogue";
+      const a = "10";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes Categories error", () => {
+      const block = {
+        key: "categories",
+        type: "categories",
+        categories: ["fighter", "wizard", "rogue"]
+      };
+      const t = "unknown";
+      const a = "11";
+      const t_dec = "error";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+  });
 });
+
+describe("Encodes/Decodes payloadData", () => {
+  it("Encodes/Decodes payloadData", () => {
+    const payloadData = {
+      confidences: [0.9, 0.8, 0.7],
+      categories: ["bike", "bike", "scooter"],
+      timestamp: 1234567890,
+      voltage: 12,
+      temperature: 45
+    };
+    const payloadSpec = {
+      items: [
+        {
+          key: "confidences",
+          type: "array",
+          bits: 8,
+          blocks: { key: "confidence", type: "float", bits: 4 }
+        },
+        {
+          key: "categories",
+          type: "array",
+          bits: 8,
+          blocks: {
+            key: "category",
+            type: "categories",
+            categories: ["bike", "skate", "scooter"]
+          }
+        },
+        { key: "msg_version", type: "integer", value: 1, bits: 6 },
+        { key: "timestamp", type: "integer", bits: 32 },
+        {
+          key: "voltage",
+          type: "float",
+          bits: 8,
+          lower: 10,
+          upper: 13
+        },
+        {
+          key: "temperature",
+          type: "float",
+          bits: 8,
+          lower: 5,
+          upper: 50
+        }
+      ]
+    };
+    const message =
+      "0000001111101100101100000011000010000001010010011001011000000010110100101010101011100011";
+    assert.equal(spos.encode(payloadData, payloadSpec), message);
+    const decoded = spos.decode(message, payloadSpec);
+    assert.payload(payloadSpec, payloadData, decoded);
+  });
+});
+
+describe("Calculates crc8", () => {
+  it("Calculates and validates crc8", () => {
+    const payloadData = {
+      value1: 1 ,
+      value2: "kitten",
+      value3: 0.9,
+      value4: true,
+    };
+    const payloadSpec = {
+      crc8: true,
+      items: [
+        {
+          key: "value1",
+          type: "integer",
+          bits: 8,
+        },
+        {
+          key: "value2",
+          type: "categories",
+          categories: ["cat", "kitten", "cute"]
+        },
+        { key: "value3", type: "float", bits: 8 },
+        {
+          key: "value4",
+          type: "boolean",
+        }
+      ]
+    };
+    const message = "00000001011110011010000001010100"
+    assert.equal(spos.encode(payloadData, payloadSpec), message);
+    const decoded = spos.decode(message, payloadSpec);
+    assert.payload(payloadSpec, payloadData, decoded);
+    assert.isTrue(decoded.crc8)
+  });
+})
+
+describe("Hex Encodes/Decodes payloadData", () => {
+  it("Hex Encodes/Decodes payloadData", () => {
+    const payloadData = {
+      confidences: [0.9, 0.8, 0.7],
+      categories: ["bike", "bike", "scooter"],
+      timestamp: 1234567890,
+      voltage: 12,
+      temperature: 45
+    };
+    const payloadSpec = {
+      items: [
+        {
+          key: "confidences",
+          type: "array",
+          bits: 8,
+          blocks: { key: "confidence", type: "float", bits: 4 }
+        },
+        {
+          key: "categories",
+          type: "array",
+          bits: 8,
+          blocks: {
+            key: "category",
+            type: "categories",
+            categories: ["bike", "skate", "scooter"]
+          }
+        },
+        { key: "msg_version", type: "integer", value: 1, bits: 6 },
+        { key: "timestamp", type: "integer", bits: 32 },
+        {
+          key: "voltage",
+          type: "float",
+          bits: 8,
+          lower: 10,
+          upper: 13
+        },
+        {
+          key: "temperature",
+          type: "float",
+          bits: 8,
+          lower: 5,
+          upper: 50
+        }
+      ]
+    };
+    const message = "03ecb03081499602d2aae3"
+    assert.equal(spos.hexEncode(payloadData, payloadSpec), message);
+    const decoded = spos.hexDecode(message, payloadSpec);
+    assert.payload(payloadSpec, payloadData, decoded);
+  });
+});
+

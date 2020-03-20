@@ -89,6 +89,21 @@ const encoders = {
       )
       .map(index => encoders.encodeInteger(index, { bits: 6, offset: 0 }))
       .join("");
+  },
+  encodeSteps: (value, block) => {
+    const bits = Math.ceil(Math.log(block.steps.length, 2));
+    block.steps.push(Infinity);
+    const _value = block.steps.reduce(
+      (acc, cur, idx) => (acc != -1 ? acc : value < cur ? idx : -1),
+      -1
+    );
+    return encoders.encodeInteger(_value, { bits: bits, offset: 0 });
+  },
+  encodeCategories: (value, block) => {
+    const bits = Math.ceil(Math.log(block.categories.length + 1, 2));
+    const index = block.categories.indexOf(value);
+    const _value = index != -1 ? index : block.categories.length;
+    return encoders.encodeInteger(_value, { bits: bits, offset: 0 });
   }
 };
 

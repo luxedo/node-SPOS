@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const { encoders } = require("./encoders.js");
 const { decoders } = require("./decoders.js");
 const { validators } = require("./validators.js");
+const { crc8 } = require("crc");
 
 const TYPES_KEYS = {
   boolean: {},
@@ -59,6 +60,13 @@ const TYPES_KEYS = {
   string: {
     required: { length: "number" },
     optional: { custom_alphabeth: { type: "object", default: {} } }
+  },
+  steps: {
+    required: { steps: "array" },
+    optional: { steps_names: { type: "array", default: [] } }
+  },
+  categories: {
+    required: { categories: "array" }
   }
 };
 const TYPES = {
@@ -89,7 +97,6 @@ const TYPES = {
   },
   array: {
     input: "array",
-    validator: validators.validateArray,
     encoder: (value, block) => encoders.encodeArray(value, block, encodeBlock),
     decoder: (value, block) => decoders.decodeArray(value, block, decodeMessage)
   },
@@ -105,6 +112,16 @@ const TYPES = {
       encoders.encodeString(value, block, BASE64_REV_ALPHABETH),
     decoder: (value, block) =>
       decoders.decodeString(value, block, BASE64_ALPHABETH)
+  },
+  steps: {
+    input: "number",
+    encoder: encoders.encodeSteps,
+    decoder: decoders.decodeSteps
+  },
+  categories: {
+    input: "string",
+    encoder: encoders.encodeCategories,
+    decoder: decoders.decodeCategories
   }
 };
 
@@ -118,7 +135,7 @@ const BASE64_REV_ALPHABETH = Object.fromEntries(
 );
 
 function validateBlock(block) {
-  // Test required keys
+  // Check required keys
   if (!("key" in block))
     throw new ReferenceError(`Block ${JSON.stringify(block)} must have 'key'.`);
   else if (typeof block.key != "string")
@@ -132,33 +149,66 @@ function validateBlock(block) {
       }, should be one of: ${Object.keys(TYPES).join(", ")}.`
     );
 
-  // Test required settings
+  // Check required settings
   const type_keys = TYPES_KEYS[block.type];
-  if ("required" in type_keys) {
-    for (const [key, value] of Object.entries(type_keys.required)) {
-      if (!(key in block))
-        throw new ReferenceError(`Block ${block.key} must have key '${key}'`);
-      if (value == "block") {
-        validateBlock(block[key]);
-      } else if (value == "items") {
-        for (innerBlock of block.items) validateBlock(innerBlock);
-      } else if (!(typeof block[key] == value))
+  type_keys.required = "required" in type_keys ? type_keys.required : {};
+  type_keys.optional = "optional" in type_keys ? type_keys.optional : {};
+  for (const [key, value] of Object.entries(type_keys.required)) {
+    if (!(key in block))
+      throw new ReferenceError(`Block ${block.key} must have key '${key}'`);
+    if (value == "block") {
+      validateBlock(block[key]);
+    } else if (value == "items") {
+      for (innerBlock of block.items) validateBlock(innerBlock);
+    } else if (value == "array") {
+      if (!Array.isArray(block[key]))
         throw new RangeError(
           `Block ${block.key} '${key}' must be of type '${value}'`
         );
+    } else if (!(typeof block[key] == value))
+      throw new RangeError(
+        `Block ${block.key} '${key}' must be of type '${value}'`
+      );
+  }
+
+  // Check optional settings
+  for (const [key, value] of Object.entries(type_keys.optional)) {
+    if (key in block)
+      if (value.type == "array") {
+        if (!Array.isArray(block[key]))
+          throw RangeError(
+            `Value for block '${
+              block.key
+            }' has wrong type '${typeof value} instead of 'array'.`
+          );
+      } else if (!(typeof block[key] == value.type)) {
+        throw RangeError(
+          `Block ${block.key} key ${key} must be of type ${value}`
+        );
+      }
+    if (
+      block.type == "steps" &&
+      "steps_names" in block &&
+      block.steps_names.length != block.steps.length + 1
+    ) {
+      throw RangeError(
+        `'steps_names' for block ${block.key} has to have length 1 + len(steps).`
+      );
     }
   }
 
-  // Test optional settings
-  if ("optional" in type_keys) {
-    for (const [key, value] of Object.entries(type_keys.optional)) {
-      if (key in block && !(typeof block[key] == value.type))
-        throw RangeError(
-          `Block ${block.key} settings.${key} must be of type ${value}`
-        );
-      else {
-      }
-    }
+  // Check for unexpected keys
+  for (const key of Object.keys(block)) {
+    if (
+      !(
+        key in type_keys.required ||
+        key in type_keys.optional ||
+        ["key", "type", "value"].includes(key)
+      )
+    )
+      throw ReferenceError(
+        `Block '${block.key}' has an unexpected key '${key}'.`
+      );
   }
 
   return block;
@@ -173,6 +223,14 @@ function fillDefaults(block) {
         block[key] = value.default;
       }
     }
+  }
+  if (block.type == "steps" && block.steps_names.length == 0) {
+    let steps_names = [`x<${block.steps[0]}`];
+    for (let i = 0; i < block.steps.length - 1; i++) {
+      steps_names.push(`${block.steps[i]}<=x<${block.steps[i + 1]}`);
+    }
+    steps_names.push(`x>=${block.steps[block.steps.length - 1]}`);
+    block.steps_names = steps_names;
   }
   return block;
 }
@@ -271,6 +329,67 @@ function accumulateBits(message, block) {
   return acc;
 }
 
+function encode(payloadData, payloadSpec) {
+  const values = payloadSpec.items.map(block =>
+    "value" in block ? block.value : payloadData[block.key]
+  );
+  let message = encodeItems(values, payloadSpec.items).join("");
+  message = message.padEnd(Math.ceil(message.length / 8) * 8, "0");
+  if (payloadSpec.crc8) {
+    message += crc8Encode(message);
+  }
+  return message;
+}
+
+function decode(message, payloadSpec) {
+  const values = decodeMessage(message, payloadSpec.items);
+  const payloadData = Object.fromEntries(
+    payloadSpec.items.map((block, idx) => [block.key, values[idx]])
+  );
+  for (const [key, value] of Object.entries(payloadData)) {
+    if (value.type == "pad") delete payloadData[key];
+  }
+  if (payloadSpec.crc8 === true) {
+    const msg = message.slice(0, -8);
+    const hash = message.substr(message.length - 8);
+    payloadData["crc8"] = crc8Encode(msg) === hash;
+  }
+  return payloadData;
+}
+
+function crc8Encode(message) {
+  return crc8(parseInt(message, 2).toString(16))
+    .toString(2)
+    .padStart(8, "0");
+}
+
+function hexEncode(payloadData, payloadSpec) {
+  const message = encode(payloadData, payloadSpec);
+  let hex = "";
+  for (let i = 0; i < message.length / 8; i++) {
+    hex += parseInt(message.substring(8 * i, 8 * (i + 1)), 2)
+      .toString(16)
+      .padStart(2, "0");
+  }
+  return hex;
+}
+
+function hexDecode(message, payloadSpec) {
+  const bits = message.length*4
+  let bin = ""
+  for (let i = 0; i < message.length / 2; i++) {
+    bin += parseInt(message.substring(2 * i, 2 * (i + 1)), 16)
+      .toString(2)
+      .padStart(8, "0");
+  }
+  return decode(bin, payloadSpec)
+}
+
 module.exports.validateBlock = validateBlock;
 module.exports.encodeBlock = encodeBlock;
 module.exports.decodeBlock = decodeBlock;
+module.exports.encode = encode;
+module.exports.decode = decode;
+module.exports.hexEncode = hexEncode;
+module.exports.hexDecode = hexDecode;
+module.exports.fillDefaults = fillDefaults;

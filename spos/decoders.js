@@ -70,6 +70,18 @@ const decoders = {
           : alphabeth[index]
       )
       .join("");
+  },
+  decodeSteps: (message, block) => {
+    const bits = Math.ceil(Math.log(block.steps_names.length, 2));
+    value = decoders.decodeInteger(message, { bits: bits, offset: 0 });
+    return block.steps_names[value];
+  },
+  decodeCategories: (message, block) => {
+    let categories = block.categories;
+    categories.push("error");
+    const bits = Math.ceil(Math.log(categories, 2));
+    const _value = decoders.decodeInteger(message, { bits: bits, offset: 0 });
+    return categories[_value];
   }
 };
 
