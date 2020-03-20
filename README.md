@@ -79,6 +79,11 @@ payload_data = spos.binDecode(message, payload_spec)
   float_data: 0.59375
 }
 ```
+## Installation
+
+```bash
+npm install spos
+```
 
 ## Functions
 
