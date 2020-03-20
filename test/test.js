@@ -40,9 +40,9 @@ assert.block = (block, expected, actual) => {
   } else if (block.type == "object") {
     assert.items(block.items, expected, actual);
   } else if (block.type == "float") {
-    block = spos.fillDefaults(block)
-    const delta = (block.upper - block.lower) / block.bits
-    assert.closeTo(expected, actual, delta)
+    block = spos.fillDefaults(block);
+    const delta = (block.upper - block.lower) / block.bits;
+    assert.closeTo(expected, actual, delta);
   } else {
     assert.equal(expected, actual);
   }
@@ -732,8 +732,8 @@ describe("Encodes/Decodes Block", () => {
   });
 });
 
-describe("Encodes/Decodes payloadData", () => {
-  it("Encodes/Decodes payloadData", () => {
+describe("Bin Encodes/Decodes payloadData", () => {
+  it("Bin Encodes/Decodes payloadData", () => {
     const payloadData = {
       confidences: [0.9, 0.8, 0.7],
       categories: ["bike", "bike", "scooter"],
@@ -779,8 +779,8 @@ describe("Encodes/Decodes payloadData", () => {
     };
     const message =
       "0000001111101100101100000011000010000001010010011001011000000010110100101010101011100011";
-    assert.equal(spos.encode(payloadData, payloadSpec), message);
-    const decoded = spos.decode(message, payloadSpec);
+    assert.equal(spos.encodeBin(payloadData, payloadSpec), message);
+    const decoded = spos.decodeBin(message, payloadSpec);
     assert.payload(payloadSpec, payloadData, decoded);
   });
 });
@@ -788,10 +788,10 @@ describe("Encodes/Decodes payloadData", () => {
 describe("Calculates crc8", () => {
   it("Calculates and validates crc8", () => {
     const payloadData = {
-      value1: 1 ,
+      value1: 1,
       value2: "kitten",
       value3: 0.9,
-      value4: true,
+      value4: true
     };
     const payloadSpec = {
       crc8: true,
@@ -799,7 +799,7 @@ describe("Calculates crc8", () => {
         {
           key: "value1",
           type: "integer",
-          bits: 8,
+          bits: 8
         },
         {
           key: "value2",
@@ -809,17 +809,17 @@ describe("Calculates crc8", () => {
         { key: "value3", type: "float", bits: 8 },
         {
           key: "value4",
-          type: "boolean",
+          type: "boolean"
         }
       ]
     };
-    const message = "00000001011110011010000001010100"
-    assert.equal(spos.encode(payloadData, payloadSpec), message);
-    const decoded = spos.decode(message, payloadSpec);
+    const message = "00000001011110011010000001010100";
+    assert.equal(spos.encodeBin(payloadData, payloadSpec), message);
+    const decoded = spos.decodeBin(message, payloadSpec);
     assert.payload(payloadSpec, payloadData, decoded);
-    assert.isTrue(decoded.crc8)
+    assert.isTrue(decoded.crc8);
   });
-})
+});
 
 describe("Hex Encodes/Decodes payloadData", () => {
   it("Hex Encodes/Decodes payloadData", () => {
@@ -866,10 +866,73 @@ describe("Hex Encodes/Decodes payloadData", () => {
         }
       ]
     };
-    const message = "03ecb03081499602d2aae3"
+    const message = "03ecb03081499602d2aae3";
     assert.equal(spos.hexEncode(payloadData, payloadSpec), message);
     const decoded = spos.hexDecode(message, payloadSpec);
     assert.payload(payloadSpec, payloadData, decoded);
   });
 });
 
+describe("Encodes/Decodes payloadData", () => {
+  it("Encodes/Decodes payloadData", () => {
+    const payloadData = {
+      confidences: [0.9, 0.8, 0.7],
+      categories: ["bike", "bike", "scooter"],
+      timestamp: 1234567890,
+      voltage: 12,
+      temperature: 45
+    };
+    const payloadSpec = {
+      items: [
+        {
+          key: "confidences",
+          type: "array",
+          bits: 8,
+          blocks: { key: "confidence", type: "float", bits: 4 }
+        },
+        {
+          key: "categories",
+          type: "array",
+          bits: 8,
+          blocks: {
+            key: "category",
+            type: "categories",
+            categories: ["bike", "skate", "scooter"]
+          }
+        },
+        { key: "msg_version", type: "integer", value: 1, bits: 6 },
+        { key: "timestamp", type: "integer", bits: 32 },
+        {
+          key: "voltage",
+          type: "float",
+          bits: 8,
+          lower: 10,
+          upper: 13
+        },
+        {
+          key: "temperature",
+          type: "float",
+          bits: 8,
+          lower: 5,
+          upper: 50
+        }
+      ]
+    };
+    const message = new Uint8Array([
+      3,
+      236,
+      176,
+      48,
+      129,
+      73,
+      150,
+      2,
+      210,
+      170,
+      227
+    ]);
+    assert.deepEqual(spos.encode(payloadData, payloadSpec), message);
+    const decoded = spos.decode(message, payloadSpec);
+    assert.payload(payloadSpec, payloadData, decoded);
+  });
+});

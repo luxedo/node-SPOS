@@ -134,6 +134,12 @@ const BASE64_REV_ALPHABETH = Object.fromEntries(
   new Map(_b64_alphabeth.split("").map((c, i) => [c, i]))
 );
 
+/*
+ * Validates the a block, throwing errors if the block is malformed.
+ * @param {object} block The block to be validated.
+ * @return {object} block A clone of the block.
+ * @throws ReferenceError, RangeError
+ */
 function validateBlock(block) {
   // Check required keys
   if (!("key" in block))
@@ -214,6 +220,21 @@ function validateBlock(block) {
   return block;
 }
 
+/*
+ * Validates a binary message. 
+ * @param {string} message The binary message to be decoded.
+ * @throws RangeError
+ */
+function validateBinMessage(message) {
+  if (message.replace(/[01]/g, "") != "")
+    throw RangeError("Message must a string representing a binary value.");
+}
+
+/*
+ * Fills `block` with default options if applicable.
+ * @param {object} block The block to fill.
+ * @return {object} block A clone of the block.
+ */
 function fillDefaults(block) {
   block = JSON.parse(JSON.stringify(block));
   const type_keys = TYPES_KEYS[block.type];
@@ -235,11 +256,12 @@ function fillDefaults(block) {
   return block;
 }
 
-function validateMessage(message) {
-  if (message.replace(/[01]/g, "") != "")
-    throw RangeError("Message must a string representing a binary value.");
-}
-
+/*
+ * Encodes value with the block specification.
+ * @param value The value to encode.
+ * @param {object} block The block specification.
+ * @return {string} A binary string.
+ */
 function encodeBlock(value, block) {
   block = validateBlock(block);
   const type = TYPES[block.type];
@@ -263,14 +285,26 @@ function encodeBlock(value, block) {
   return type.encoder(value, block);
 }
 
+/*
+ * Decodes value with the block specification.
+ * @param {string} message The binary message to be decoded.
+ * @param {object} block The block specification.
+ * @return value The value of the message.
+ */
 function decodeBlock(message, block) {
   block = validateBlock(block);
   block = fillDefaults(block);
-  validateMessage(message);
+  validateBinMessage(message)
   const type = TYPES[block.type];
   return type.decoder(message, block);
 }
 
+/*
+ * Encodes an array of values according to the block specification in items.
+ * @param {array} values The values to encode.
+ * @param {array} items The array of block specifications.
+ * @return {array} messages The array of encoded values as a binary string.
+ */
 function encodeItems(values, items) {
   if (values.length != items.length)
     throw RangeError("Arrays 'messages' and 'items' differ in length.");
@@ -278,6 +312,13 @@ function encodeItems(values, items) {
     throw RangeError("Empty inputs for 'messages' and 'items'");
   return items.map((block, idx) => encodeBlock(values[idx], block));
 }
+
+/*
+ * Decodes an array of values according to the block specification in items.
+ * @param {array} messages The array of encoded values as a binary string.
+ * @param {array} items The array of block specifications.
+ * @return {array} values The decoded values.
+ */
 function decodeItems(messages, items) {
   let acc_message = "";
   if (messages.length != items.length)
@@ -292,6 +333,12 @@ function decodeItems(messages, items) {
   });
 }
 
+/*
+ * Decodes a binary string according to the block specification in items.
+ * @param {array} message The binary string of the encoded values.
+ * @param {array} items The array of block specifications.
+ * @return {array} values The decoded values.
+ */
 function decodeMessage(message, items) {
   let messages = [];
   for (block of items) {
@@ -302,6 +349,12 @@ function decodeMessage(message, items) {
   return decodeItems(messages, items);
 }
 
+/*
+ * Calculates the ammount of bits used in the block according to message.
+ * @param {array} message The binary string of the encoded value.
+ * @param {object} block The block specification.
+ * @return {number} bits The bits used in the block.
+ */
 function accumulateBits(message, block) {
   acc = 0;
   if ("bits" in block) acc += block.bits;
@@ -329,7 +382,13 @@ function accumulateBits(message, block) {
   return acc;
 }
 
-function encode(payloadData, payloadSpec) {
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {string} message The message as a binary string.
+ */
+function encodeBin(payloadData, payloadSpec) {
   const values = payloadSpec.items.map(block =>
     "value" in block ? block.value : payloadData[block.key]
   );
@@ -341,7 +400,13 @@ function encode(payloadData, payloadSpec) {
   return message;
 }
 
-function decode(message, payloadSpec) {
+/*
+ * Decodes message  according to payloadSpec.
+ * @param {string} message The message as a binary string.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
+function decodeBin(message, payloadSpec) {
   const values = decodeMessage(message, payloadSpec.items);
   const payloadData = Object.fromEntries(
     payloadSpec.items.map((block, idx) => [block.key, values[idx]])
@@ -357,14 +422,14 @@ function decode(message, payloadSpec) {
   return payloadData;
 }
 
-function crc8Encode(message) {
-  return crc8(parseInt(message, 2).toString(16))
-    .toString(2)
-    .padStart(8, "0");
-}
-
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {string} message The message as an hex string.
+ */
 function hexEncode(payloadData, payloadSpec) {
-  const message = encode(payloadData, payloadSpec);
+  const message = encodeBin(payloadData, payloadSpec);
   let hex = "";
   for (let i = 0; i < message.length / 8; i++) {
     hex += parseInt(message.substring(8 * i, 8 * (i + 1)), 2)
@@ -374,22 +439,80 @@ function hexEncode(payloadData, payloadSpec) {
   return hex;
 }
 
+/*
+ * Decodes message  according to payloadSpec.
+ * @param {string} message The message as an hex string.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
 function hexDecode(message, payloadSpec) {
-  const bits = message.length*4
-  let bin = ""
+  const bits = message.length * 4;
+  let bin = "";
   for (let i = 0; i < message.length / 2; i++) {
     bin += parseInt(message.substring(2 * i, 2 * (i + 1)), 16)
       .toString(2)
       .padStart(8, "0");
   }
-  return decode(bin, payloadSpec)
+  return decodeBin(bin, payloadSpec);
+}
+
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {Uint8Array} message The message as an Uint8Array.
+ */
+function encode(payloadData, payloadSpec) {
+  return hexStringToByte(hexEncode(payloadData, payloadSpec));
+}
+
+/*
+ * Decodes message  according to payloadSpec.
+ * @param {string} message The message as an hex string.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
+function decode(message, payloadSpec) {
+  return hexDecode(byteToHexString(message), payloadSpec);
+}
+
+function crc8Encode(message) {
+  return crc8(parseInt(message, 2).toString(16))
+    .toString(2)
+    .padStart(8, "0");
+}
+
+function hexStringToByte(str) {
+  if (!str) {
+    return new Uint8Array();
+  }
+  var a = [];
+  for (var i = 0, len = str.length; i < len; i += 2) {
+    a.push(parseInt(str.substr(i, 2), 16));
+  }
+  return new Uint8Array(a);
+}
+
+function byteToHexString(uint8arr) {
+  if (!uint8arr) {
+    return "";
+  }
+  var hexStr = "";
+  for (var i = 0; i < uint8arr.length; i++) {
+    var hex = (uint8arr[i] & 0xff).toString(16);
+    hex = hex.length === 1 ? "0" + hex : hex;
+    hexStr += hex;
+  }
+  return hexStr;
 }
 
 module.exports.validateBlock = validateBlock;
+module.exports.fillDefaults = fillDefaults;
 module.exports.encodeBlock = encodeBlock;
 module.exports.decodeBlock = decodeBlock;
-module.exports.encode = encode;
-module.exports.decode = decode;
+module.exports.encodeBin = encodeBin;
+module.exports.decodeBin = decodeBin;
 module.exports.hexEncode = hexEncode;
 module.exports.hexDecode = hexDecode;
-module.exports.fillDefaults = fillDefaults;
+module.exports.encode = encode;
+module.exports.decode = decode;

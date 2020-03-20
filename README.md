@@ -3,7 +3,7 @@
 > **SPOS** stands for **Small Payload Object Serializer**.
 
 <--
-[![codecov](https://codecov.io/gh/luxedo/spos/branch/master/graph/badge.svg)](https://codecov.io/gh/luxedo/spos) [![CodeFactor](https://www.codefactor.io/repository/github/luxedo/spos/badge)](https://www.codefactor.io/repository/github/luxedo/spos) [![PyPI version](https://badge.fury.io/py/spos.svg)](https://badge.fury.io/py/spos) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![codecov](https://codecov.io/gh/luxedo/node-spos/branch/master/graph/badge.svg)](https://codecov.io/gh/luxedo/node-spos) [![CodeFactor](https://www.codefactor.io/repository/github/luxedo/node-spos/badge)](https://www.codefactor.io/repository/github/luxedo/node-spos) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 -->
 
 `SPOS` is a tool for serializing objects. This tool focuses in
@@ -13,8 +13,8 @@ or [Globalstar](https://www.globalstar.com/en-us/) are ideal candidates
 for `SPOS`. Spos is built as a library for `python3` and a command line
 tool.
 
-This is and implementation of the `SPOS` specification in `NodeJS`. See 
-https://github.com/luxedo/SPOS for details.
+This is and implementation of the `SPOS` specification in `Javascript`. See
+HTTPS://github.com/luxedo/SPOS for details.
 
 ## Quick Start
 
@@ -23,37 +23,31 @@ To encode data, `SPOS` needs two arguments to serialize the data: The `payload_d
 ```javascript
 const spos = require("spos")
 payload_spec = {
-  "name": "example payload",
-  "version": "1.0.0",
-  "items": [{
-    "type": "integer",
-    "name": "payload_version",
-    "value": 1,  // 01
-    "settings": {
-      "bits": 2
-    }
+  name: "example payload",
+  version: "1.0.0",
+  items: [{
+    type: "integer",
+    name: "payload_version",
+    value: 1,  // 01
+    bits: 2
   }, {
-    "type": "integer",
-    "name": "integer 1",
-    "key": "int_data",
-    "settings": {
-      "bits": 6
-    }
+    type: "integer",
+    name: "integer 1",
+    key: "int_data",
+    bits: 6
   }, {
-    "type": "float",
-    "name": "float 1",
-    "key": "float_data",
-    "settings": {
-      "bits": 6
-    }
+    type: "float",
+    name: "float 1",
+    key: "float_data",
+    bits: 6
 }]
 payload_data = {
-  "int_data": 13,    // 001101
-  "float_data": 0.6  // 010011 (19/32 or 0.59375)
+  int_data: 13,    // 001101
+  float_data: 0.6  // 010011 (19/32 or 0.59375)
 }
 
-message = spos.encode(payload_data, payload_spec)
-"0b01001101010011"
+message = spos.binEncode(payload_data, payload_spec)
+"01001101010011"
 ```
 
 Decoding data
@@ -61,108 +55,93 @@ Decoding data
 ```javascript
 const spos = require("spos")
 payload_spec = {
-  "name": "example payload",
-  "version": "1.0.0",
-  "items": [{
-    "type": "integer",
-    "name": "payload_version",
-    "value": 1,  # 01
-    "settings": {
-      "bits": 2
-    }
+  name: "example payload",
+  version: "1.0.0",
+  items: [{
+    type: "integer",
+    name: "payload_version",
+    value: 1,
+    bits: 2
   }, {
-    "type": "integer",
-    "name": "integer 1",
-    "key": "int_data",
-    "settings": {
-      "bits": 6
-    }
+    type: "integer",
+    name: "integer 1",
+    key: "int_data",
+    bits: 6
   }, {
-    "type": "float",
-    "name": "float 1",
-    "key": "float_data",
-    "settings": {
-      "bits": 6
-    }
+    type: "float",
+    name: "float 1",
+    key: "float_data",
+    bits: 6
 }]
-message = "0b01001101010011"
-payload_data = spos.decode(message, payload_spec)
+message = "01001101010011"
+payload_data = spos.binDecode(message, payload_spec)
 {
-  "payload_version": 1,
-  "int_data": 13,
-  "float_data": 0.59375
+  payload_version: 1,
+  int_data: 13,
+  float_data: 0.59375
 }
 ```
 
 ## Functions
 
-```python
-def encode(payload_data, payload_spec):
-    """
-    Encodes a message from payload_data according to payload_spec.
-    Returns the message as a binary string.
-
-    Args:
-        payload_data (dict): The list of values to encode.
-        payload_spec (dict): Payload specifications.
-
-    Returns:
-        message (str): Binary string of the message.
-    """
+```javascript
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {string} message The message as a binary string.
+ */
+function encodeBin(payloadData, payloadSpec)
 ```
 
-```python
-def decode(message, payload_spec):
-    """
-    Decodes a binary message according to payload_spec.
-
-    Args:
-        message (str): Binary string of the message.
-        payload_spec (dict): Payload specifications.
-
-    Returns:
-        payload_data (dict): Payload data.
-    """
+```javascript
+/*
+ * Decodes message  according to payloadSpec.
+ * @param {string} message The message as a binary string.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
+function decodeBin(message, payloadSpec)
 ```
 
-```python
-def hex_encode(payload_data, payload_spec):
-"""
-Encodes a message from payload_data according to payload_spec.
-Returns the message as an hex string.
-
-    Args:
-        payload_data (dict): The list of values to encode.
-        payload_spec (dict): Payload specifications.
-
-    Returns:
-        message (str): Binary string of the message.
-    """
-
+```javascript
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {string} message The message as an hex string.
+ */
+function hexEncode(payloadData, payloadSpec)
 ```
 
-```python
-def hex_decode(message, payload_spec):
-    """
-    Decodes an hex message according to payload_spec.
-
-    Args:
-        message (str): Hex string of the message.
-        payload_spec (dict): Payload specifications.
-
-    Returns:
-        payload_data (dict): Payload data.
-    """
+```javascript
+/*
+ * Decodes message  according to payloadSpec.
+ * @param {string} message The message as an hex string.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
+function hexDecode(message, payloadSpec)
 ```
 
-## Command line usage
+```javascript
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {Uint8Array} message The message as an Uint8Array.
+ */
+function encode(payloadData, payloadSpec)
+```
 
-```python
-# Encode data
-cat payload_data | spos -p payload_spec.json
-
-# Decode data
-cat message | spos -d -p payload_spec.json
+```javascript
+/*
+ * Decodes message  according to payloadSpec.
+ * @param {string} message The message as an Uint8Array.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
+function decode(message, payloadSpec)
 ```
 
 ## License
