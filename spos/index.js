@@ -144,11 +144,11 @@ function validateBlock(block) {
   // Check required keys
   if (!("key" in block))
     throw new ReferenceError(`Block ${JSON.stringify(block)} must have 'key'.`);
-  else if (typeof block.key != "string")
+  if (typeof block.key != "string")
     throw RangeError(`Block ${block.key} 'key' must be a string .`);
-  else if (!("type" in block))
+  if (!("type" in block))
     throw new ReferenceError(`Block ${block.key} must have 'type'.`);
-  else if (!(block.type in TYPES))
+  if (!(block.type in TYPES))
     throw new RangeError(
       `Block ${block.key} has type: ${
         block.type
@@ -162,7 +162,7 @@ function validateBlock(block) {
   for (const [key, value] of Object.entries(type_keys.required)) {
     if (!(key in block))
       throw new ReferenceError(`Block ${block.key} must have key '${key}'`);
-    if (value == "block") {
+    else if (value == "block") {
       validateBlock(block[key]);
     } else if (value == "items") {
       for (innerBlock of block.items) validateBlock(innerBlock);
@@ -341,6 +341,7 @@ function decodeItems(messages, items) {
  */
 function decodeMessage(message, items) {
   let messages = [];
+  items = items.map(block => fillDefaults(block));
   for (block of items) {
     const bits = accumulateBits(message, block);
     messages.push(message.substring(0, bits));
@@ -489,23 +490,17 @@ function crc8Encode(message) {
 }
 
 function hexStringToByte(str) {
-  if (!str) {
-    return new Uint8Array();
-  }
-  var a = [];
-  for (var i = 0, len = str.length; i < len; i += 2) {
+  let a = [];
+  for (let i = 0, len = str.length; i < len; i += 2) {
     a.push(parseInt(str.substr(i, 2), 16));
   }
   return new Uint8Array(a);
 }
 
 function byteToHexString(uint8arr) {
-  if (!uint8arr) {
-    return "";
-  }
-  var hexStr = "";
-  for (var i = 0; i < uint8arr.length; i++) {
-    var hex = (uint8arr[i] & 0xff).toString(16);
+  let hexStr = "";
+  for (let i = 0; i < uint8arr.length; i++) {
+    let hex = (uint8arr[i] & 0xff).toString(16);
     hex = hex.length === 1 ? "0" + hex : hex;
     hexStr += hex;
   }
@@ -516,6 +511,8 @@ module.exports.validateBlock = validateBlock;
 module.exports.fillDefaults = fillDefaults;
 module.exports.encodeBlock = encodeBlock;
 module.exports.decodeBlock = decodeBlock;
+module.exports.encodeItems = encodeItems;
+module.exports.decodeItems = decodeItems;
 module.exports.binEncode = binEncode;
 module.exports.binDecode = binDecode;
 module.exports.hexEncode = hexEncode;

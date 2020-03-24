@@ -66,9 +66,7 @@ const encoders = {
     return message;
   },
   encodeObject: (value, block, encodeItems) => {
-    const values = block.items.map(inner_block =>
-      "value" in inner_block ? inner_block["value"] : value[inner_block["key"]]
-    );
+    const values = block.items.map(inner_block => value[inner_block["key"]]);
     return encodeItems(values, block.items).join("");
   },
   encodeString: (value, block, rev_alphabeth) => {
@@ -91,7 +89,7 @@ const encoders = {
       .join("");
   },
   encodeSteps: (value, block) => {
-    const bits = Math.ceil(Math.log(block.steps.length, 2));
+    const bits = Math.ceil(Math.log(block.steps.length + 1, 2));
     block.steps.push(Infinity);
     const _value = block.steps.reduce(
       (acc, cur, idx) => (acc != -1 ? acc : value < cur ? idx : -1),

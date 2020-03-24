@@ -55,9 +55,15 @@ describe("validateBlock", () => {
     };
     assert.throws(() => spos.encodeBlock(true, block), ReferenceError);
   });
+  it("Throws an exception when key is not a string", () => {
+    const block = {
+      key: 1
+    };
+    assert.throws(() => spos.encodeBlock(true, block), RangeError);
+  });
   it("Throws an exception when passing a block without type", () => {
     const block = {
-      type: "boolean"
+      key: "testKey"
     };
     assert.throws(() => spos.encodeBlock(true, block), ReferenceError);
   });
@@ -83,6 +89,23 @@ describe("validateBlock", () => {
     };
     assert.throws(() => spos.encodeBlock("0101", block), RangeError);
   });
+  it("Throws an exception when passing wrong type for required array", () => {
+    const block = {
+      key: "test",
+      type: "categories",
+      categories: "err"
+    };
+    assert.throws(() => spos.encodeBlock("0101", block), RangeError);
+  });
+  it("Throws an exception when passing wrong type for optional array", () => {
+    const block = {
+      key: "test",
+      type: "steps",
+      steps: [1, 2],
+      steps_names: "err"
+    };
+    assert.throws(() => spos.encodeBlock("0101", block), RangeError);
+  });
   it("Throws an exception when the type of an optional key is invalid", () => {
     const block = {
       key: "test",
@@ -104,7 +127,21 @@ describe("validateBlock", () => {
   });
 });
 
-describe("validateValue", () => {});
+describe("validateValue", () => {
+  it("Throws an exception when the array input has wrong type", () => {
+    const block = {
+      key: "test",
+      type: "array",
+      bits: 6,
+      blocks: {
+        key: "array value",
+        type: "boolean"
+      }
+    };
+    const value = "err";
+    assert.throws(() => spos.encodeBlock(value, block), RangeError);
+  });
+});
 
 describe("validateMessage", () => {
   it("Throws an exception when passing a string that doesn't represent a binary", () => {
@@ -113,6 +150,33 @@ describe("validateMessage", () => {
       type: "boolean"
     };
     assert.throws(() => spos.decodeBlock("error", block), RangeError);
+  });
+});
+
+describe("Encodes/Decodes Items", () => {
+  it("Throws an exception when passing values and items of different lengths for encodeItems", () => {
+    const items = [
+      {
+        key: "test",
+        type: "boolean"
+      }
+    ];
+    assert.throws(() => spos.encodeItems([], items), RangeError);
+  });
+  it("Throws an exception when passing no values and items for encodeItems", () => {
+    assert.throws(() => spos.encodeItems([], []), RangeError);
+  });
+  it("Throws an exception when passing values and items of different lengths for decodeItems", () => {
+    const items = [
+      {
+        key: "test",
+        type: "boolean"
+      }
+    ];
+    assert.throws(() => spos.decodeItems([], items), RangeError);
+  });
+  it("Throws an exception when passing no values and items for decodeItems", () => {
+    assert.throws(() => spos.decodeItems([], []), RangeError);
   });
 });
 
@@ -779,8 +843,8 @@ describe("Bin Encodes/Decodes payloadData", () => {
     };
     const message =
       "0000001111101100101100000011000010000001010010011001011000000010110100101010101011100011";
-    assert.equal(spos.encodeBin(payloadData, payloadSpec), message);
-    const decoded = spos.decodeBin(message, payloadSpec);
+    assert.equal(spos.binEncode(payloadData, payloadSpec), message);
+    const decoded = spos.binDecode(message, payloadSpec);
     assert.payload(payloadSpec, payloadData, decoded);
   });
 });
@@ -791,7 +855,8 @@ describe("Calculates crc8", () => {
       value1: 1,
       value2: "kitten",
       value3: 0.9,
-      value4: true
+      value4: true,
+      value5: 0.2
     };
     const payloadSpec = {
       crc8: true,
@@ -810,13 +875,21 @@ describe("Calculates crc8", () => {
         {
           key: "value4",
           type: "boolean"
+        },
+        {
+          key: "value5",
+          type: "steps",
+          steps: [0.1, 0.9],
+          steps_names: ["a", "b", "c"]
         }
       ]
     };
-    const message = "00000001011110011010000001010100";
-    assert.equal(spos.encodeBin(payloadData, payloadSpec), message);
-    const decoded = spos.decodeBin(message, payloadSpec);
-    assert.payload(payloadSpec, payloadData, decoded);
+    const decPayload = JSON.parse(JSON.stringify(payloadData))
+    decPayload.value5 = "b"
+    const message = "00000001011110011010100000100101";
+    assert.equal(spos.binEncode(payloadData, payloadSpec), message);
+    const decoded = spos.binDecode(message, payloadSpec);
+    assert.payload(payloadSpec, decPayload, decoded);
     assert.isTrue(decoded.crc8);
   });
 });
