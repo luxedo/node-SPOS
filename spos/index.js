@@ -221,7 +221,7 @@ function validateBlock(block) {
 }
 
 /*
- * Validates a binary message. 
+ * Validates a binary message.
  * @param {string} message The binary message to be decoded.
  * @throws RangeError
  */
@@ -294,7 +294,7 @@ function encodeBlock(value, block) {
 function decodeBlock(message, block) {
   block = validateBlock(block);
   block = fillDefaults(block);
-  validateBinMessage(message)
+  validateBinMessage(message);
   const type = TYPES[block.type];
   return type.decoder(message, block);
 }
@@ -388,7 +388,7 @@ function accumulateBits(message, block) {
  * @param {object} payloadSpec Payload specifications.
  * @return {string} message The message as a binary string.
  */
-function encodeBin(payloadData, payloadSpec) {
+function binEncode(payloadData, payloadSpec) {
   const values = payloadSpec.items.map(block =>
     "value" in block ? block.value : payloadData[block.key]
   );
@@ -406,7 +406,7 @@ function encodeBin(payloadData, payloadSpec) {
  * @param {object} payloadSpec Payload specifications.
  * @return {array} payloadData The object containing the decoded values.
  */
-function decodeBin(message, payloadSpec) {
+function binDecode(message, payloadSpec) {
   const values = decodeMessage(message, payloadSpec.items);
   const payloadData = Object.fromEntries(
     payloadSpec.items.map((block, idx) => [block.key, values[idx]])
@@ -429,7 +429,7 @@ function decodeBin(message, payloadSpec) {
  * @return {string} message The message as an hex string.
  */
 function hexEncode(payloadData, payloadSpec) {
-  const message = encodeBin(payloadData, payloadSpec);
+  const message = binEncode(payloadData, payloadSpec);
   let hex = "";
   for (let i = 0; i < message.length / 8; i++) {
     hex += parseInt(message.substring(8 * i, 8 * (i + 1)), 2)
@@ -453,7 +453,7 @@ function hexDecode(message, payloadSpec) {
       .toString(2)
       .padStart(8, "0");
   }
-  return decodeBin(bin, payloadSpec);
+  return binDecode(bin, payloadSpec);
 }
 
 /*
@@ -477,7 +477,13 @@ function decode(message, payloadSpec) {
 }
 
 function crc8Encode(message) {
-  return crc8(parseInt(message, 2).toString(16))
+  hex = "";
+  for (let i = 0; i < message.length / 8; i++) {
+    hex += parseInt(message.substring(8 * i, 8 * (i + 1)), 2)
+      .toString(16)
+      .padStart(2, "0");
+  }
+  return crc8(Buffer.from(hex, "hex"))
     .toString(2)
     .padStart(8, "0");
 }
@@ -510,8 +516,8 @@ module.exports.validateBlock = validateBlock;
 module.exports.fillDefaults = fillDefaults;
 module.exports.encodeBlock = encodeBlock;
 module.exports.decodeBlock = decodeBlock;
-module.exports.encodeBin = encodeBin;
-module.exports.decodeBin = decodeBin;
+module.exports.binEncode = binEncode;
+module.exports.binDecode = binDecode;
 module.exports.hexEncode = hexEncode;
 module.exports.hexDecode = hexDecode;
 module.exports.encode = encode;
