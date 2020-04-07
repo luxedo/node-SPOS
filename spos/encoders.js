@@ -37,13 +37,11 @@ const encoders = {
     const upper = block.upper;
     const lower = block.lower;
     const approximation =
-      block.approximation == "round"
-        ? Math.round
+      block.approximation == "ceil"
+        ? Math.ceil
         : block.approximation == "floor"
         ? Math.floor
-        : block.approximation == "ceil"
-        ? Math.ceil
-        : undefined;
+        : round2Even;
     const overflow = Math.pow(2, block.bits) - 1;
     const delta = upper - lower;
     value = (overflow * (value - lower)) / delta;
@@ -105,4 +103,18 @@ const encoders = {
   }
 };
 
+/*
+ * Rounds the number `n`. If the decimal part of `n` is exactly 0.5
+ * rounds the closest even number.
+ * @param n {number} number.
+ * @return round {number} rounded number.
+ */
+function round2Even(n) {
+  const round = Math.round(n);
+  return n.toString().replace(/.*\./, "") == 5
+    ? round % 2 == 1
+      ? round - 1
+      : round
+    : round;
+}
 module.exports.encoders = encoders;

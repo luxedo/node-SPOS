@@ -797,6 +797,34 @@ describe("Encodes/Decodes Block", () => {
 });
 
 describe("Bin Encodes/Decodes payloadData", () => {
+  it("Test getSubitems", () => {
+    const payloadData = {
+      holy: {
+        grail: true,
+        deeper: {
+          mariana: 11
+        }
+      }
+    };
+    const payloadSpec = {
+      items: [
+        {
+          key: "holy.grail",
+          type: "boolean"
+        },
+        {
+          key: "holy.deeper.mariana",
+          type: "integer",
+          bits: 7
+        }
+      ]
+    };
+    const message = "10001011";
+    assert.equal(spos.binEncode(payloadData, payloadSpec), message);
+    const decoded = spos.binDecode(message, payloadSpec);
+    const dec = { "holy.grail": true, "holy.deeper.mariana": 11 };
+    assert.payload(payloadSpec, dec, decoded);
+  });
   it("Bin Encodes/Decodes payloadData", () => {
     const payloadData = {
       confidences: [0.9, 0.8, 0.7],
@@ -842,7 +870,7 @@ describe("Bin Encodes/Decodes payloadData", () => {
       ]
     };
     const message =
-      "0000001111101100101100000011000010000001010010011001011000000010110100101010101011100011";
+      "0000001111101100101000000011000010000001010010011001011000000010110100101010101011100011";
     assert.equal(spos.binEncode(payloadData, payloadSpec), message);
     const decoded = spos.binDecode(message, payloadSpec);
     assert.payload(payloadSpec, payloadData, decoded);
@@ -884,8 +912,8 @@ describe("Calculates crc8", () => {
         }
       ]
     };
-    const decPayload = JSON.parse(JSON.stringify(payloadData))
-    decPayload.value5 = "b"
+    const decPayload = JSON.parse(JSON.stringify(payloadData));
+    decPayload.value5 = "b";
     const message = "00000001011110011010100000100101";
     assert.equal(spos.binEncode(payloadData, payloadSpec), message);
     const decoded = spos.binDecode(message, payloadSpec);
@@ -939,7 +967,7 @@ describe("Hex Encodes/Decodes payloadData", () => {
         }
       ]
     };
-    const message = "03ecb03081499602d2aae3";
+    const message = "03eca03081499602d2aae3";
     assert.equal(spos.hexEncode(payloadData, payloadSpec), message);
     const decoded = spos.hexDecode(message, payloadSpec);
     assert.payload(payloadSpec, payloadData, decoded);
@@ -994,7 +1022,7 @@ describe("Encodes/Decodes payloadData", () => {
     const message = new Uint8Array([
       3,
       236,
-      176,
+      160,
       48,
       129,
       73,

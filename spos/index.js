@@ -391,7 +391,7 @@ function accumulateBits(message, block) {
  */
 function binEncode(payloadData, payloadSpec) {
   const values = payloadSpec.items.map(block =>
-    "value" in block ? block.value : payloadData[block.key]
+    "value" in block ? block.value : getSubitem(block.key, payloadData)
   );
   let message = encodeItems(values, payloadSpec.items).join("");
   message = message.padEnd(Math.ceil(message.length / 8) * 8, "0");
@@ -421,6 +421,22 @@ function binDecode(message, payloadSpec) {
     payloadData["crc8"] = crc8Encode(msg) === hash;
   }
   return payloadData;
+}
+
+/*
+ * Gets a subitem from "obj" according to "key" layers. Eg:
+ *
+ * getSubitem("key1.key2", {"key1": {"key2": True}}) Returns the
+ * value of "key2" inside "key1".
+ * @param {str} key Key with items splitted with "." (eg "results.count.armigera")
+ * @param {object} obj Object to gather valule from.
+ * @return value Nested value according to key.
+ */
+function getSubitem(key, obj) {
+  for (let i of key.split(".")) {
+    obj = obj[i]
+  }
+  return obj
 }
 
 /*
