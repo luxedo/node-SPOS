@@ -15,7 +15,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 const { blocks } = require("./blocks.js");
 const { utils } = require("./utils.js");
-const { crc8 } = require("crc");
 
 function encodeBlock(value, blockSpec) {
   return new blocks.Block(blockSpec).binEncode(value);
@@ -198,7 +197,9 @@ function decodeFromSpecs(message, payloadSpecs, input = "bytes") {
   for (let payloadSpec of payloadSpecs) {
     try {
       return decode(message, payloadSpec, input);
-    } catch (err) {}
+    } catch (err) {
+      // Ignore and try the next payloadSpec
+    }
   }
   throw RangeError("Message did not match any version.");
 }

@@ -45,7 +45,6 @@ function hexToBytes(hex) {
 }
 
 function hexToBin(hex) {
-  const bits = hex.length * 4;
   let bin = "";
   for (let i = 0; i < hex.length / 2; i++) {
     bin += parseInt(hex.substring(2 * i, 2 * (i + 1)), 16)
