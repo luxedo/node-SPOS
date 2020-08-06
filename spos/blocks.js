@@ -285,20 +285,31 @@ class ObjectBlock extends BlockABC {
         let nest = {};
         nest[newKey] = value;
         newVal = this.nestObject(nest);
-        newObj[inKey] = Object.assign({}, newObj[inKey], newVal);
+        newObj[inKey] = this.mergeObj(newObj[inKey] || {}, newVal);
       } else {
         if (Array.isArray(value)) {
           if (utils.isObject(value[0]))
             newObj[key] = value.map(this.nestObject);
           else newObj[key] = value;
         } else if (utils.isObject(value)) {
-          newObj[key] = Object.assign({}, newObj[key], value);
+          newObj[key] = this.mergeObj(newObj[key] || {}, value);
         } else {
           newObj[key] = value;
         }
       }
     }
     return newObj;
+  }
+  mergeObj(obj1, obj2) {
+    let merged = JSON.parse(JSON.stringify(obj1));
+    for (const [key, val] of Object.entries(obj2)) {
+      if (utils.isObject(val)) {
+        merged[key] = this.mergeObj(merged[key] || {}, val);
+      } else {
+        merged[key] = val;
+      }
+    }
+    return merged;
   }
   _binEncode(value) {
     return this.blocklist

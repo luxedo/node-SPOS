@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --coverage",
+    "random": "mocha test/test_random.js",
     "pretty": "prettier --write \"index.js\" \"spos/**/*.js\" \"test/**/*.js\""
   },
   "repository": {

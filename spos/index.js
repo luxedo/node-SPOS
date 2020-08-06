@@ -120,8 +120,8 @@ function binEncode(payloadData, payloadSpec) {
 
 function binDecode(message, payloadSpec) {
   validatePayloadSpec(payloadSpec);
-  meta = payloadSpec.meta || {};
-  msgMeta = {
+  let meta = payloadSpec.meta || {};
+  let msgMeta = {
     name: payloadSpec.name,
     version: payloadSpec.version,
   };
@@ -147,13 +147,13 @@ function binDecode(message, payloadSpec) {
     [msgMeta.header, message] = new blocks.Block({
       key: "header",
       type: "object",
-      blocklist: meta.header.filter((blockSpec) => !blockSpec.value),
+      blocklist: meta.header.filter((blockSpec) => !("value" in blockSpec)),
     }).consume(message);
     msgMeta.header = Object.assign(
       {},
       msgMeta.header,
       meta.header
-        .filter((blockSpec) => blockSpec.value)
+        .filter((blockSpec) => "value" in blockSpec)
         .reduce((acc, blockSpec) => {
           acc[blockSpec.key] = blockSpec.value;
           return acc;
@@ -170,7 +170,7 @@ function binDecode(message, payloadSpec) {
   return { meta: msgMeta, body: payloadData };
 }
 
-function encode(payloadData, payloadSpec, output = "bin") {
+function encode(payloadData, payloadSpec, output = "bytes") {
   let message = binEncode(payloadData, payloadSpec);
   if (output === "bin") return message;
   else if (output === "hex") return utils.binToHex(message);
@@ -181,7 +181,7 @@ function encode(payloadData, payloadSpec, output = "bin") {
     );
 }
 
-function decode(message, payloadSpec, input = "bin") {
+function decode(message, payloadSpec, input = "bytes") {
   if (input === "bin") return binDecode(message, payloadSpec);
   else if (input === "hex")
     return binDecode(utils.hexToBin(message), payloadSpec);
@@ -193,11 +193,11 @@ function decode(message, payloadSpec, input = "bin") {
     );
 }
 
-function decodeFromSpecs(message, payloadSpecs) {
+function decodeFromSpecs(message, payloadSpecs, input = "bytes") {
   validatePayloadSpecs(payloadSpecs);
   for (let payloadSpec of payloadSpecs) {
     try {
-      return decode(message, payloadSpec);
+      return decode(message, payloadSpec, input);
     } catch (err) {}
   }
   throw RangeError("Message did not match any version.");

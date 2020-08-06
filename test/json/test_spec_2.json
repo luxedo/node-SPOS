@@ -1,0 +1,15 @@
+{
+  "name": "test",
+  "version": 2,
+  "meta": {
+    "encode_version": true,
+    "version_bits": 6,
+    "crc8": true,
+    "header": [
+      { "key": "RPi_on", "value": 0 },
+      { "key": "Routines_ok", "value": 0 },
+      { "key": "spos_version", "value": "1.2.0-beta" }
+    ]
+  },
+  "body": []
+}

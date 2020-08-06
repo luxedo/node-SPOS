@@ -1323,8 +1323,8 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
     const decPayload = JSON.parse(JSON.stringify(payloadData));
     decPayload.value5 = "b";
     const message = "00000001011110011010100000100101";
-    assert.equal(spos.encode(payloadData, payloadSpec), message);
-    const decoded = spos.decode(message, payloadSpec);
+    assert.equal(spos.encode(payloadData, payloadSpec, "bin"), message);
+    const decoded = spos.decode(message, payloadSpec, "bin");
     assert.objectCloseTo(decoded.body, decPayload);
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
@@ -1427,10 +1427,10 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
         { key: "value3", type: "float", bits: 8 },
       ],
     };
-    const enc = spos.encode(payloadData, payloadSpec);
+    const enc = spos.encode(payloadData, payloadSpec, "bin");
     const message = "10100000001011110011000010110101";
     assert.equal(enc, message);
-    assert.objectCloseTo(spos.decode(enc, payloadSpec), {
+    assert.objectCloseTo(spos.decode(enc, payloadSpec, "bin"), {
       meta: {
         name: "header data",
         version: 0,
@@ -1507,10 +1507,10 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
         { key: "value3", type: "float", bits: 8 },
       ],
     };
-    const enc = spos.encode(payloadData, payloadSpec);
+    const enc = spos.encode(payloadData, payloadSpec, "bin");
     const message = "10100000001011110011000010110101";
     assert.equal(enc, message);
-    assert.objectCloseTo(spos.decode(enc, payloadSpec), {
+    assert.objectCloseTo(spos.decode(enc, payloadSpec, "bin"), {
       meta: {
         name: "header data",
         version: 0,
@@ -1518,6 +1518,60 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
         header: {
           value4: true,
           value5: "b",
+          static1: "my static message",
+          static2: ["static too", 2],
+        },
+      },
+      body: { value1: 1, value2: "kitten", value3: 0.9 },
+    });
+  });
+  it("Does not encodes all static data in header", () => {
+    const payloadData = {
+      value1: 1,
+      value2: "kitten",
+      value3: 0.9,
+      value4: true,
+      value5: 0.2,
+    };
+    const payloadSpec = {
+      name: "header data",
+      version: 0,
+      meta: {
+        crc8: true,
+        header: [
+          {
+            key: "static1",
+            value: "my static message",
+          },
+          {
+            key: "static2",
+            value: ["static too", 2],
+          },
+        ],
+      },
+      body: [
+        {
+          key: "value1",
+          type: "integer",
+          bits: 8,
+        },
+        {
+          key: "value2",
+          type: "categories",
+          categories: ["cat", "kitten", "cute"],
+        },
+        { key: "value3", type: "float", bits: 8 },
+      ],
+    };
+    const enc = spos.encode(payloadData, payloadSpec, "bin");
+    const message = "00000001011110011000000011111101";
+    assert.equal(enc, message);
+    assert.objectCloseTo(spos.decode(enc, payloadSpec, "bin"), {
+      meta: {
+        name: "header data",
+        version: 0,
+        crc8: true,
+        header: {
           static1: "my static message",
           static2: ["static too", 2],
         },
@@ -1592,9 +1646,12 @@ describe("Encodes/Decodes from multiple payloadSpecs", () => {
   });
   it("thows an error for version mismatch", () => {
     let t = { "sensor x": false, "sensor y": 19 };
-    let enc = spos.encode(t, this.payload_spec_0);
+    let enc = spos.encode(t, this.payload_spec_0, "bin");
     enc = enc.slice(0, 2) + "1" + enc.slice(3);
-    assert.throws(() => spos.decodeFromSpecs(enc, this.specs), RangeError);
+    assert.throws(
+      () => spos.decodeFromSpecs(enc, this.specs, "bin"),
+      RangeError
+    );
   });
   it("thows an error for name mismatch", () => {
     let t = { "sensor x": false, "sensor y": 19 };

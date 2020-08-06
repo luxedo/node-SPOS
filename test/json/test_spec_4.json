@@ -1,0 +1,68 @@
+{
+  "name": "test",
+  "version": 4,
+  "meta": {
+    "encode_version": true,
+    "version_bits": 6,
+    "crc8": true,
+    "header": [
+      { "key": "RPi_on", "value": 1 },
+      { "key": "Routines_ok", "value": 1 },
+      { "key": "spos_version", "value": "1.2.0-beta" }
+    ]
+  },
+  "body": [
+    {
+      "key": "system",
+      "type": "object",
+      "blocklist": [
+        { "key": "version", "type": "integer", "bits": 4 },
+        {
+          "key": "rpi_temperature",
+          "type": "float",
+          "bits": 6,
+          "lower": 35,
+          "upper": 75
+        },
+        {
+          "key": "voltage",
+          "type": "float",
+          "bits": 6,
+          "lower": 10,
+          "upper": 13
+        }
+      ]
+    },
+    {
+      "key": "processing",
+      "type": "object",
+      "blocklist": [
+        {
+          "key": "fill_factor",
+          "type": "float",
+          "bits": 5,
+          "lower": 0,
+          "upper": 1
+        },
+        {
+          "key": "exposure",
+          "type": "float",
+          "bits": 5,
+          "lower": 0,
+          "upper": 1
+        },
+        {
+          "key": "count",
+          "type": "object",
+          "blocklist": [
+            { "key": "armigera", "type": "integer", "bits": 6 },
+            { "key": "eridania", "type": "integer", "bits": 6 },
+            { "key": "cosmioides", "type": "integer", "bits": 6 },
+            { "key": "frugiperda", "type": "integer", "bits": 6 },
+            { "key": "saccharalis", "type": "integer", "bits": 6 }
+          ]
+        }
+      ]
+    }
+  ]
+}

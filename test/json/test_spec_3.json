@@ -1,0 +1,62 @@
+{
+  "name": "test",
+  "version": 3,
+  "meta": {
+    "encode_version": true,
+    "version_bits": 6,
+    "crc8": true,
+    "header": [
+      { "key": "RPi_on", "value": 1 },
+      { "key": "Routines_ok", "value": 0 },
+      { "key": "spos_version", "value": "1.2.0-beta" }
+    ]
+  },
+  "body": [
+    {
+      "key": "system",
+      "type": "object",
+      "blocklist": [
+        { "key": "version", "type": "integer", "bits": 4 },
+        {
+          "key": "rpi_temperature",
+          "type": "float",
+          "bits": 6,
+          "lower": 35,
+          "upper": 75
+        },
+        {
+          "key": "voltage",
+          "type": "float",
+          "bits": 6,
+          "lower": 10,
+          "upper": 13
+        },
+        {
+          "key": "rootp_free",
+          "type": "float",
+          "bits": 8,
+          "lower": 0,
+          "upper": 4096
+        },
+        {
+          "key": "camera_ok",
+          "type": "boolean"
+        },
+        {
+          "key": "uc_ok",
+          "type": "boolean"
+        }
+
+      ]
+    },
+    {
+      "key": "routines",
+      "type": "object",
+      "blocklist": [
+        { "key": "setup.status", "type": "boolean" },
+        { "key": "picture.status", "type": "boolean" },
+        { "key": "processing.status", "type": "boolean" }
+      ]
+    }
+  ]
+}
