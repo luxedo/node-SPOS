@@ -115,7 +115,6 @@ describe("Random decodeFromSpecs tests", () => {
     const payloadSpecs = Object.values(files);
     new Array(N).fill(0).forEach((n, idx) => {
       const pSpecFile = choose(Object.keys(files));
-      const payloadSpec = files[pSpecFile];
       it(`Random decodeFromSpecs ${idx}`, function (done) {
         this.timeout(20000);
         exec(`spos -p ${pSpecFile} -f hex -r`, (error, stdout, stderr) => {
