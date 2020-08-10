@@ -32,7 +32,7 @@ payload_spec = {
   body: [{
     type: "integer",
     key: "constant_data",
-    value: 2,  # 10
+    value: 2,      // 10
     bits: 2
   }, {
     type: "integer",
@@ -46,9 +46,10 @@ payload_spec = {
 payload_data = {
   int_data: 13,    // 001101
   float_data: 0.6  // 010011 (19/32 or 0.59375)
+                   // padding 000
 }
 message = spos.binEncode(payload_data, payload_spec, output="bin")
-"01001101010011"
+"1000110110011000"
 ```
 
 Decoding data
@@ -72,7 +73,7 @@ const payload_spec = {
     key: "float_data",
     bits: 6
 }]
-const message = "0b10001101010011"
+const message = "1000110110011000"
 const decoded = spos.decode(message, payload_spec, input="bin")
 decoded
 {
