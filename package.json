@@ -1,9 +1,10 @@
 {
   "name": "spos",
-  "version": "1.2.0-beta",
+  "version": "1.2.1-beta",
   "description": "SPOS stands for Small Payload Object Serializer",
   "main": "index.js",
   "scripts": {
+    "dev": "npm install && npm link . && npm link spos",
     "test": "jest --coverage",
     "random": "mocha test/test_random.js",
     "pretty": "prettier --write \"index.js\" \"spos/**/*.js\" \"test/**/*.js\""
@@ -42,7 +43,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm test"
+      "pre-commit": "npm run pretty && npm test && npm run random"
     }
   }
 }
