@@ -16,14 +16,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const { blocks } = require("./blocks.js");
 const { utils } = require("./utils.js");
 
+/*
+ * Encodes value with the block specification to binary.
+ * @param value The value to encode.
+ * @param {object} block The block specification.
+ * @return {string} A binary string.
+ */
 function encodeBlock(value, blockSpec) {
   return new blocks.Block(blockSpec).binEncode(value);
 }
 
+/*
+ * Decodes binary with the block specification.
+ * @param {string} message The binary message to be decoded.
+ * @param {object} block The block specification.
+ * @return value The value of the message.
+ */
 function decodeBlock(value, blockSpec) {
   return new blocks.Block(blockSpec).binDecode(value);
 }
 
+/*
+ * Validates a payload specification, throwing errors if it is malformed.
+ * @param {payloadSpec} block The block to be validated.
+ * @throws ReferenceError, RangeError
+ */
 function validatePayloadSpec(payloadSpec) {
   if (!("name" in payloadSpec))
     throw new ReferenceError(`payloadSpec must have key 'name'.`);
@@ -65,12 +82,17 @@ function validatePayloadSpec(payloadSpec) {
     throw new RangeError(`Unexpected keys in payloadSpec ${keys}`);
 }
 
+/*
+ * Validates an arrya of  payload specifications, throwing errors if any
+ * of them are malformed. Also checks if there are two payloadSpecs with
+ * the same version number and if the names don't match.
+ * @param {payloadSpec} block The block to be validated.
+ * @throws ReferenceError, RangeError
+ */
 function validatePayloadSpecs(payloadSpecs) {
   if (!Array.isArray(payloadSpecs))
     throw RangeError("PayloadSpecs expected to be an array.");
-
   payloadSpecs.forEach(validatePayloadSpec);
-
   let names = new Set(payloadSpecs.map((ps) => ps.name));
   let versions = new Set(payloadSpecs.map((ps) => ps.version));
   if (names.size > 1)
@@ -81,10 +103,15 @@ function validatePayloadSpecs(payloadSpecs) {
     );
 }
 
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {string} message The message as a binary string.
+ */
 function binEncode(payloadData, payloadSpec) {
   validatePayloadSpec(payloadSpec);
   let meta = payloadSpec.meta || {};
-
   let message = "";
 
   if (meta.encode_version) {
@@ -117,6 +144,12 @@ function binEncode(payloadData, payloadSpec) {
   return message;
 }
 
+/*
+ * Decodes binary message according to payloadSpec.
+ * @param {string} message The message as a binary string.
+ * @param {object} payloadSpec Payload specifications.
+ * @return {array} payloadData The object containing the decoded values.
+ */
 function binDecode(message, payloadSpec) {
   validatePayloadSpec(payloadSpec);
   let meta = payloadSpec.meta || {};
@@ -169,6 +202,13 @@ function binDecode(message, payloadSpec) {
   return { meta: msgMeta, body: payloadData };
 }
 
+/*
+ * Encodes the payloadData according to payloadSpec.
+ * @param {array} payloadData The object containing the values to be encoded.
+ * @param {object} payloadSpec Payload specifications.
+ * @param {string} output the output message format (bytes|hex|bin)
+ * @return {Uint8Array|hex string|bin string} message
+ */
 function encode(payloadData, payloadSpec, output = "bytes") {
   let message = binEncode(payloadData, payloadSpec);
   if (output === "bin") return message;
@@ -180,6 +220,13 @@ function encode(payloadData, payloadSpec, output = "bytes") {
     );
 }
 
+/*
+ * Decodes message according to payloadSpec.
+ * @param {Uint8Array|hex string|bin string} message
+ * @param {object} payloadSpec Payload specifications.
+ * @param {string} input the input message format (bytes|hex|bin)
+ * @return {object} decoded The object containing the decoded values.
+ */
 function decode(message, payloadSpec, input = "bytes") {
   if (input === "bin") return binDecode(message, payloadSpec);
   else if (input === "hex")
@@ -192,6 +239,13 @@ function decode(message, payloadSpec, input = "bytes") {
     );
 }
 
+/*
+ * Decodes message according to one payloadSpec in payloadSpecs.
+ * @param {Uint8Array|hex string|bin string} message
+ * @param {array} payloadSpecs Array of payload specifications.
+ * @param {string} input the input message format (bytes|hex|bin)
+ * @return {object} decoded The object containing the decoded values.
+ */
 function decodeFromSpecs(message, payloadSpecs, input = "bytes") {
   validatePayloadSpecs(payloadSpecs);
   for (let payloadSpec of payloadSpecs) {

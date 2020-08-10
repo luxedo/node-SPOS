@@ -76,7 +76,7 @@ describe("Random payloads tests", () => {
                 if (err) throw err;
                 const payloadSpec = JSON.parse(data);
                 exec(
-                  `echo ${message}| spos -p ${pSpecFile} -f hex -d`,
+                  `echo ${message}| spos -p ${pSpecFile} -f hex -d -m`,
                   (error, stdout, stderr) => {
                     if (error || stderr || !stdout) {
                       throw error;
@@ -123,7 +123,7 @@ describe("Random decodeFromSpecs tests", () => {
           }
           const message = stdout;
           exec(
-            `echo ${message}| spos -p ${pSpecFile} -f hex -d`,
+            `echo ${message}| spos -p ${pSpecFile} -f hex -d -m`,
             (error, stdout, stderr) => {
               if (error || stderr || !stdout) {
                 throw error;

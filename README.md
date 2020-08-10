@@ -4,15 +4,21 @@
 
 [![codecov](https://codecov.io/gh/luxedo/node-spos/branch/master/graph/badge.svg)](https://codecov.io/gh/luxedo/node-spos) [![CodeFactor](https://www.codefactor.io/repository/github/luxedo/node-spos/badge)](https://www.codefactor.io/repository/github/luxedo/node-spos) [![npm version](https://badge.fury.io/js/spos.svg)](https://badge.fury.io/js/spos) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-`SPOS` is a tool for serializing objects. This tool focuses in
+> This is and implementation of the `SPOS` specification in `Javascript`. See
+> HTTPS://github.com/luxedo/SPOS for details.
+
+`SPOS` is a tool for serializing simple objects. This tool focuses in
 maintaining a consistent payload size while sacrificing precision.
 Applications with limited bandwidth like [LoRa](https://lora-alliance.org/)
 or [Globalstar](https://www.globalstar.com/en-us/) are ideal candidates
-for `SPOS`. Spos is built as a library for `python3` and a command line
-tool.
+for `SPOS`. `SPOS` has implementations for
+python3 ([SPOS](https://github.com/luxedo/SPOS)) and
+node.js ([node-SPOS](https://github.com/luxedo/node-SPOS)).
 
-This is and implementation of the `SPOS` specification in `Javascript`. See
-HTTPS://github.com/luxedo/SPOS for details.
+> In this document we will be using JSON notation to describe payload
+> specifications and payload data. For each programming language there's
+> usually an analogous data type for each notation. Eg:
+> `object <=> dict`, `array <=> list`, etc.
 
 ## Quick Start
 
@@ -22,20 +28,18 @@ To encode data, `SPOS` needs two arguments to serialize the data: The `payload_d
 const spos = require("spos")
 payload_spec = {
   name: "example payload",
-  version: "1.0.0",
-  items: [{
+  version: 1,
+  body: [{
     type: "integer",
-    name: "payload_version",
-    value: 1,  // 01
+    key: "constant_data",
+    value: 2,  # 10
     bits: 2
   }, {
     type: "integer",
-    name: "integer 1",
     key: "int_data",
     bits: 6
   }, {
     type: "float",
-    name: "float 1",
     key: "float_data",
     bits: 6
 }]
@@ -43,8 +47,7 @@ payload_data = {
   int_data: 13,    // 001101
   float_data: 0.6  // 010011 (19/32 or 0.59375)
 }
-
-message = spos.binEncode(payload_data, payload_spec)
+message = spos.binEncode(payload_data, payload_spec, output="bin")
 "01001101010011"
 ```
 
@@ -52,33 +55,40 @@ Decoding data
 
 ```javascript
 const spos = require("spos")
-payload_spec = {
+const payload_spec = {
   name: "example payload",
-  version: "1.0.0",
-  items: [{
+  version: 1,
+  body: [{
     type: "integer",
-    name: "payload_version",
-    value: 1,
+    key: "constant_data",
+    value: 2,
     bits: 2
   }, {
     type: "integer",
-    name: "integer 1",
     key: "int_data",
     bits: 6
   }, {
     type: "float",
-    name: "float 1",
     key: "float_data",
     bits: 6
 }]
-message = "01001101010011"
-payload_data = spos.binDecode(message, payload_spec)
+const message = "0b10001101010011"
+const decoded = spos.decode(message, payload_spec, input="bin")
+decoded
 {
-  payload_version: 1,
-  int_data: 13,
-  float_data: 0.59375
+  meta: {
+    name: "example payload",
+    version: 1,
+  },
+  body: {
+    constant_data: 2,
+    int_data: 13,
+    float_data: 0.59375
+  }
 }
+
 ```
+
 ## Installation
 
 ```bash
@@ -92,59 +102,32 @@ npm install spos
  * Encodes the payloadData according to payloadSpec.
  * @param {array} payloadData The object containing the values to be encoded.
  * @param {object} payloadSpec Payload specifications.
- * @return {string} message The message as a binary string.
+ * @param {string} output the output message format (bytes|hex|bin)
+ * @return {Uint8Array|hex string|bin string} message
  */
-function encodeBin(payloadData, payloadSpec)
+function encode(payloadData, payloadSpec, output = "bytes")
 ```
 
 ```javascript
 /*
- * Decodes message  according to payloadSpec.
- * @param {string} message The message as a binary string.
+ * Decodes message according to payloadSpec.
+ * @param {Uint8Array|hex string|bin string} message
  * @param {object} payloadSpec Payload specifications.
- * @return {array} payloadData The object containing the decoded values.
+ * @param {string} input the input message format (bytes|hex|bin)
+ * @return {object} decoded The object containing the decoded values.
  */
-function decodeBin(message, payloadSpec)
+function decode(message, payloadSpec, input = "bytes")
 ```
 
 ```javascript
 /*
- * Encodes the payloadData according to payloadSpec.
- * @param {array} payloadData The object containing the values to be encoded.
- * @param {object} payloadSpec Payload specifications.
- * @return {string} message The message as an hex string.
+ * Decodes message according to one payloadSpec in payloadSpecs.
+ * @param {Uint8Array|hex string|bin string} message
+ * @param {array} payloadSpecs Array of payload specifications.
+ * @param {string} input the input message format (bytes|hex|bin)
+ * @return {object} decoded The object containing the decoded values.
  */
-function hexEncode(payloadData, payloadSpec)
-```
-
-```javascript
-/*
- * Decodes message  according to payloadSpec.
- * @param {string} message The message as an hex string.
- * @param {object} payloadSpec Payload specifications.
- * @return {array} payloadData The object containing the decoded values.
- */
-function hexDecode(message, payloadSpec)
-```
-
-```javascript
-/*
- * Encodes the payloadData according to payloadSpec.
- * @param {array} payloadData The object containing the values to be encoded.
- * @param {object} payloadSpec Payload specifications.
- * @return {Uint8Array} message The message as an Uint8Array.
- */
-function encode(payloadData, payloadSpec)
-```
-
-```javascript
-/*
- * Decodes message  according to payloadSpec.
- * @param {string} message The message as an Uint8Array.
- * @param {object} payloadSpec Payload specifications.
- * @return {array} payloadData The object containing the decoded values.
- */
-function decode(message, payloadSpec)
+function decodeFromSpecs(message, payloadSpecs, input = "bytes")
 ```
 
 ## License
