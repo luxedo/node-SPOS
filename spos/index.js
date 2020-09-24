@@ -156,6 +156,7 @@ function binDecode(message, payloadSpec) {
   let msgMeta = {
     name: payloadSpec.name,
     version: payloadSpec.version,
+    message: "0x" + utils.binToHex(message),
   };
 
   if (meta.crc8) {
@@ -263,3 +264,4 @@ module.exports.decodeBlock = decodeBlock;
 module.exports.encode = encode;
 module.exports.decode = decode;
 module.exports.decodeFromSpecs = decodeFromSpecs;
+module.exports.utils = utils;

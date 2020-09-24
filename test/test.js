@@ -1018,10 +1018,13 @@ describe("Encodes/Decodes payloadData", () => {
       spos.encode(payloadData, payloadSpec),
       payloadSpec
     );
+
+    const hexEnc = spos.encode(payloadData, payloadSpec, "hex");
     assert.objectCloseTo(decoded.body, payloadData);
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
       version: payloadSpec.version,
+      message: "0x" + hexEnc,
     });
   });
   it("Bin Encodes/Decodes payloadData", () => {
@@ -1081,6 +1084,7 @@ describe("Encodes/Decodes payloadData", () => {
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
       version: payloadSpec.version,
+      message: "0x" + spos.utils.binToHex(message),
     });
   });
   it("Hex Encodes/Decodes payloadData", () => {
@@ -1139,6 +1143,7 @@ describe("Encodes/Decodes payloadData", () => {
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
       version: payloadSpec.version,
+      message: "0x" + enc,
     });
   });
   it("Bytes Encodes/Decodes payloadData", () => {
@@ -1191,6 +1196,7 @@ describe("Encodes/Decodes payloadData", () => {
     const message = [3, 236, 160, 48, 129, 73, 150, 2, 210, 170, 227];
 
     const enc = spos.encode(payloadData, payloadSpec, "bytes");
+    const hexEnc = spos.encode(payloadData, payloadSpec, "hex");
     assert.arrayCloseTo(enc, message);
     const decoded = spos.decode(enc, payloadSpec, "bytes");
     payloadData.msg_version = 1;
@@ -1198,6 +1204,7 @@ describe("Encodes/Decodes payloadData", () => {
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
       version: payloadSpec.version,
+      message: "0x" + hexEnc,
     });
   });
   it("Throws errors trying to encode/decode with invalid format", () => {
@@ -1251,10 +1258,12 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
       spos.encode(payloadData, payloadSpec),
       payloadSpec
     );
+    const hexEnc = spos.encode(payloadData, payloadSpec, "hex");
     assert.objectCloseTo(decoded.body, payloadData);
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
       version: payloadSpec.version,
+      message: "0x" + hexEnc,
     });
   });
   it("Throws an error if versions don't match", () => {
@@ -1329,6 +1338,7 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
     assert.deepEqual(decoded.meta, {
       name: payloadSpec.name,
       version: payloadSpec.version,
+      message: "0x" + spos.utils.binToHex(message),
       crc8: true,
     });
   });
@@ -1434,6 +1444,7 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
       meta: {
         name: "header data",
         version: 0,
+        message: "0x" + spos.utils.binToHex(message),
         crc8: true,
         header: { value4: true, value5: "b" },
       },
@@ -1515,6 +1526,7 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
         name: "header data",
         version: 0,
         crc8: true,
+        message: "0x" + spos.utils.binToHex(message),
         header: {
           value4: true,
           value5: "b",
@@ -1570,6 +1582,7 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
       meta: {
         name: "header data",
         version: 0,
+        message: "0x" + spos.utils.binToHex(message),
         crc8: true,
         header: {
           static1: "my static message",
@@ -1629,19 +1642,23 @@ describe("Encodes/Decodes from multiple payloadSpecs", () => {
   it("Encodes/Decodes from multiple payloadSpecs", () => {
     let t0 = { "sensor x": false, "sensor y": 19 };
     let enc0 = spos.encode(t0, this.payload_spec_0);
+    let hexEnc0 = spos.encode(t0, this.payload_spec_0, "hex");
     let dec0 = spos.decodeFromSpecs(enc0, this.specs);
     assert.objectCloseTo(dec0.body, t0);
     assert.objectCloseTo(dec0.meta, {
       name: this.payload_spec_0.name,
       version: this.payload_spec_0.version,
+      message: "0x" + hexEnc0,
     });
     let t1 = { "sensor a": 0.4, "sensor b": 500 };
     let enc1 = spos.encode(t1, this.payload_spec_1);
+    let hexEnc1 = spos.encode(t1, this.payload_spec_1, "hex");
     let dec1 = spos.decodeFromSpecs(enc1, this.specs);
     assert.objectCloseTo(dec1.body, t1);
     assert.objectCloseTo(dec1.meta, {
       name: this.payload_spec_1.name,
       version: this.payload_spec_1.version,
+      message: "0x" + hexEnc1,
     });
   });
   it("thows an error for version mismatch", () => {
