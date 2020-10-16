@@ -26,17 +26,21 @@ SOFTWARE.
 const { utils } = require("./utils.js");
 
 class BlockABC {
-  input = [];
-  required = {};
-  optional = {};
-
   constructor(blockSpec) {
+    this.input = [];
+    this.required = {};
+    this.optional = {};
+
+    this.initVariables();
+
     this.blockSpec = blockSpec;
     if ("bits" in blockSpec) this.bits = blockSpec.bits;
     if ("value" in blockSpec) {
       this.value = blockSpec.value;
     }
   }
+
+  initVariables() {}
 
   validateBlockSpecKeys(blockSpec) {
     // Check required settings
@@ -132,8 +136,10 @@ class BlockABC {
 }
 
 class BooleanBlock extends BlockABC {
-  input = ["boolean", "integer"];
-  bits = 1;
+  initVariables() {
+    this.input = ["boolean", "integer"];
+    this.bits = 1;
+  }
 
   _binEncode(value) {
     value = Number.isInteger(value) ? value !== 0 : value;
@@ -146,8 +152,10 @@ class BooleanBlock extends BlockABC {
 }
 
 class BinaryBlock extends BlockABC {
-  input = ["bin", "hex"];
-  required = { bits: "integer" };
+  initVariables() {
+    this.input = ["bin", "hex"];
+    this.required = { bits: "integer" };
+  }
 
   _binEncode(value) {
     value = !(value.replace(/[01]/g, "") == "")
@@ -164,11 +172,13 @@ class BinaryBlock extends BlockABC {
 }
 
 class IntegerBlock extends BlockABC {
-  input = ["integer"];
-  required = { bits: "integer" };
-  optional = {
-    offset: { type: "integer", default: 0 },
-  };
+  initVariables() {
+    this.input = ["integer"];
+    this.required = { bits: "integer" };
+    this.optional = {
+      offset: { type: "integer", default: 0 },
+    };
+  }
 
   _binEncode(value) {
     const overflow = Math.pow(2, this.bits) - 1;
@@ -182,17 +192,19 @@ class IntegerBlock extends BlockABC {
 }
 
 class FloatBlock extends BlockABC {
-  input = ["number"];
-  required = { bits: "integer" };
-  optional = {
-    lower: { type: "number", default: 0 },
-    upper: { type: "number", default: 1 },
-    approximation: {
-      type: "string",
-      default: "round",
-      choices: ["round", "floor", "ceil"],
-    },
-  };
+  initVariables() {
+    this.input = ["number"];
+    this.required = { bits: "integer" };
+    this.optional = {
+      lower: { type: "number", default: 0 },
+      upper: { type: "number", default: 1 },
+      approximation: {
+        type: "string",
+        default: "round",
+        choices: ["round", "floor", "ceil"],
+      },
+    };
+  }
 
   _binEncode(value) {
     const bits = this.bits;
@@ -222,8 +234,10 @@ class FloatBlock extends BlockABC {
 }
 
 class PadBlock extends BlockABC {
-  input = [null];
-  required = { bits: "integer" };
+  initVariables() {
+    this.input = [null];
+    this.required = { bits: "integer" };
+  }
   _binEncode(value) {
     return "".padStart(this.bits, "1");
   }
@@ -233,8 +247,10 @@ class PadBlock extends BlockABC {
 }
 
 class ArrayBlock extends BlockABC {
-  input = ["array"];
-  required = { bits: "integer", blocks: "blocks" };
+  initVariables() {
+    this.input = ["array"];
+    this.required = { bits: "integer", blocks: "blocks" };
+  }
 
   initializeBlock(blockSpec) {
     this.lengthBlock = new Block({
@@ -273,8 +289,10 @@ class ArrayBlock extends BlockABC {
 }
 
 class ObjectBlock extends BlockABC {
-  input = ["object"];
-  required = { blocklist: "blocklist" };
+  initVariables() {
+    this.input = ["object"];
+    this.required = { blocklist: "blocklist" };
+  }
 
   initializeBlock(blockSpec) {
     this.blocklist = blockSpec.blocklist.map((b_spec) => new Block(b_spec));
@@ -349,9 +367,11 @@ class ObjectBlock extends BlockABC {
 }
 
 class StringBlock extends BlockABC {
-  input = ["string"];
-  required = { length: "integer" };
-  optional = { custom_alphabeth: { type: "object", default: {} } };
+  initVariables() {
+    this.input = ["string"];
+    this.required = { length: "integer" };
+    this.optional = { custom_alphabeth: { type: "object", default: {} } };
+  }
 
   initializeBlock(blockSpec) {
     const _b64_alphabeth =
@@ -398,9 +418,11 @@ class StringBlock extends BlockABC {
 }
 
 class StepsBlock extends BlockABC {
-  input = "number";
-  required = { steps: "array" };
-  optional = { steps_names: { type: "array", default: [] } };
+  initVariables() {
+    this.input = "number";
+    this.required = { steps: "array" };
+    this.optional = { steps_names: { type: "array", default: [] } };
+  }
 
   initializeBlock(blockSpec) {
     if (!utils.isSorted(this.blockSpec.steps))
@@ -441,8 +463,10 @@ class StepsBlock extends BlockABC {
 }
 
 class CategoriesBlock extends BlockABC {
-  input = "string";
-  required = { categories: "array" };
+  initVariables() {
+    this.input = "string";
+    this.required = { categories: "array" };
+  }
 
   initializeBlock(blockSpec) {
     this.blockSpec.categories.push("unknown");
@@ -468,19 +492,19 @@ class CategoriesBlock extends BlockABC {
 }
 
 class Block {
-  TYPES = {
-    boolean: BooleanBlock,
-    binary: BinaryBlock,
-    integer: IntegerBlock,
-    float: FloatBlock,
-    pad: PadBlock,
-    array: ArrayBlock,
-    object: ObjectBlock,
-    string: StringBlock,
-    steps: StepsBlock,
-    categories: CategoriesBlock,
-  };
   constructor(blockSpec) {
+    this.TYPES = {
+      boolean: BooleanBlock,
+      binary: BinaryBlock,
+      integer: IntegerBlock,
+      float: FloatBlock,
+      pad: PadBlock,
+      array: ArrayBlock,
+      object: ObjectBlock,
+      string: StringBlock,
+      steps: StepsBlock,
+      categories: CategoriesBlock,
+    };
     this.blockSpec = JSON.parse(JSON.stringify(blockSpec));
     this.validateBlockSpec(this.blockSpec);
     this.block = new this.TYPES[blockSpec.type](this.blockSpec);

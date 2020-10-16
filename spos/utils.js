@@ -98,3 +98,11 @@ module.exports.utils = {
   hexToBin,
   bytesToHex,
 };
+
+// POLYFILLS
+Object.prototype.fromEntries = (iterable) => {
+  return [...iterable].reduce((obj, [key, val]) => {
+    obj[key] = val;
+    return obj;
+  }, {});
+};
