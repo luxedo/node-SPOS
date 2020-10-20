@@ -377,7 +377,7 @@ class StringBlock extends BlockABC {
     const _b64_alphabeth =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-    this.alphabeth = Object.fromEntries(
+    this.alphabeth = utils.fromEntries(
       new Map(
         _b64_alphabeth.split("").map((c, i) => {
           if (i in blockSpec.custom_alphabeth)

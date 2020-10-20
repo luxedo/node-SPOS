@@ -74,6 +74,13 @@ function bytesToHex(uint8arr) {
   return hexStr;
 }
 
+function fromEntries(iterable) {
+  return [...iterable].reduce((obj, [key, val]) => {
+    obj[key] = val;
+    return obj;
+  }, {});
+}
+
 module.exports.utils = {
   isNumber: (value) => typeof value === "number" && isFinite(value),
   isString: (value) => typeof value === "string" || value instanceof String,
@@ -97,12 +104,5 @@ module.exports.utils = {
   hexToBytes,
   hexToBin,
   bytesToHex,
-};
-
-// POLYFILLS
-Object.prototype.fromEntries = (iterable) => {
-  return [...iterable].reduce((obj, [key, val]) => {
-    obj[key] = val;
-    return obj;
-  }, {});
+  fromEntries,
 };
