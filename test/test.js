@@ -1603,6 +1603,41 @@ describe("Encodes/Decodes payloadSpec with meta", () => {
       body: { value1: 1, value2: "kitten", value3: 0.9 },
     });
   });
+  it("Decodes message with padding", () => {
+    const payloadData = {
+      value1: 1,
+    };
+    const payloadSpec = {
+      name: "data with padding",
+      version: 2,
+      meta: {
+        crc8: false,
+      },
+      body: [
+        {
+          key: "value1",
+          type: "integer",
+          bits: 8,
+        },
+        {
+          key: "pad",
+          type: "pad",
+          bits: 8,
+        },
+      ],
+    };
+    const enc = spos.encode(payloadData, payloadSpec, "bin");
+    const message = "0000000111111111";
+    assert.equal(enc, message);
+    assert.objectCloseTo(spos.decode(enc, payloadSpec, "bin"), {
+      meta: {
+        name: "data with padding",
+        version: 2,
+        message: "0x" + spos.utils.binToHex(message),
+      },
+      body: { value1: 1 },
+    });
+  });
 });
 
 describe("Encodes/Decodes from multiple payloadSpecs", () => {

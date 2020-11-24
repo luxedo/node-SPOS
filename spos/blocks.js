@@ -328,6 +328,20 @@ class ObjectBlock extends BlockABC {
     }
     return newObj;
   }
+  removeNull(obj) {
+    let newObj = {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (utils.isObject(val)) {
+        newObj[key] = this.removeNull(obj[key]);
+      } else {
+        newObj[key] = val;
+      }
+      if (newObj[key] == null) {
+        delete newObj[key];
+      }
+    }
+    return newObj;
+  }
   mergeObj(obj1, obj2) {
     let merged = JSON.parse(JSON.stringify(obj1));
     for (const [key, val] of Object.entries(obj2)) {
@@ -353,7 +367,7 @@ class ObjectBlock extends BlockABC {
       [v, message] = block.consume(message);
       values[block.blockSpec.key] = v;
     }
-    return this.nestObject(values);
+    return this.removeNull(this.nestObject(values));
   }
   accumulateBits(message) {
     return this.blocklist.reduce(
