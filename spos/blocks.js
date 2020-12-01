@@ -46,7 +46,7 @@ class BlockABC {
     // Check required settings
     for (const [key, value] of Object.entries(this.required)) {
       if (!(key in blockSpec))
-        throw new ReferenceError(`Block must have key 'key'`);
+        throw new ReferenceError(`Block must have key ${key}`);
       if (!this.validateType(value, blockSpec[key]))
         throw new RangeError(
           `Block ${blockSpec.key} key '${key}' has unexpected type.`
@@ -249,31 +249,43 @@ class PadBlock extends BlockABC {
 class ArrayBlock extends BlockABC {
   initVariables() {
     this.input = ["array"];
-    this.required = { bits: "integer", blocks: "blocks" };
+    this.required = { length: "integer", blocks: "blocks" };
+    this.optional = { fixed: { type: "boolean", default: false } };
   }
 
   initializeBlock(blockSpec) {
+    this.bits = Math.ceil(Math.log2(blockSpec.length + 1));
     this.lengthBlock = new Block({
       key: "length",
       type: "integer",
-      bits: blockSpec.bits,
+      bits: this.bits,
     });
     this.itemsBlock = new Block(blockSpec.blocks);
-    this.maxLength = 2 ** this.bits - 1;
   }
   _binEncode(value) {
     let message = "";
-    let length = value.length > this.maxLength ? this.maxLength : value.length;
-    message += this.lengthBlock.binEncode(length);
-    message += value.reduce((acc, v, idx) => {
-      if (idx >= length) return acc;
-      return acc + this.itemsBlock.binEncode(v);
-    }, "");
+    let length;
+    if (this.blockSpec.fixed) {
+      length = this.blockSpec.length;
+    } else {
+      length =
+        value.length > this.blockSpec.length
+          ? this.blockSpec.length
+          : value.length;
+      message += this.lengthBlock.binEncode(length);
+    }
+    message += value
+      .slice(0, length)
+      .reduce((acc, v, idx) => acc + this.itemsBlock.binEncode(v), "");
     return message;
   }
   _binDecode(message) {
     let length;
-    [length, message] = this.lengthBlock.consume(message);
+    if (!this.blockSpec.fixed) {
+      [length, message] = this.lengthBlock.consume(message);
+    } else {
+      length = this.blockSpec.length;
+    }
     let value = [];
     for (let i = 0; i < length; i++) {
       let v;
@@ -283,8 +295,17 @@ class ArrayBlock extends BlockABC {
     return value;
   }
   accumulateBits(message) {
-    let [length, msg] = this.lengthBlock.consume(message);
-    return this.bits + length * this.itemsBlock.accumulateBits(msg);
+    let bits = 0;
+    let length, msg;
+    if (!this.blockSpec.fixed) {
+      [length, msg] = this.lengthBlock.consume(message);
+      bits += this.bits;
+    } else {
+      length = this.blockSpec.length;
+      msg = message;
+    }
+    bits += length * this.itemsBlock.accumulateBits(msg);
+    return bits;
   }
 }
 
@@ -441,7 +462,7 @@ class StepsBlock extends BlockABC {
   initializeBlock(blockSpec) {
     if (!utils.isSorted(this.blockSpec.steps))
       throw RangeError(`Steps Block must be ordered`);
-    this.bits = Math.ceil(Math.log(this.blockSpec.steps.length + 1, 2));
+    this.bits = Math.ceil(Math.log2(this.blockSpec.steps.length + 1));
     this.stepsBlock = new Block({
       key: "steps",
       type: "integer",
@@ -484,7 +505,7 @@ class CategoriesBlock extends BlockABC {
 
   initializeBlock(blockSpec) {
     this.blockSpec.categories.push("unknown");
-    this.bits = Math.ceil(Math.log(this.blockSpec.categories.length, 2));
+    this.bits = Math.ceil(Math.log2(this.blockSpec.categories.length));
     this.categoriesBlock = new Block({
       key: "categories",
       type: "integer",

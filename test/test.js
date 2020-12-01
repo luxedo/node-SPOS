@@ -351,7 +351,7 @@ describe("Encodes/Decodes Block", () => {
       const block = {
         key: "array",
         type: "array",
-        bits: 8,
+        length: 255,
         blocks: {
           key: "array value",
           type: "integer",
@@ -367,7 +367,7 @@ describe("Encodes/Decodes Block", () => {
       const block = {
         key: "array",
         type: "array",
-        bits: 2,
+        length: 3,
         blocks: {
           key: "array value",
           type: "integer",
@@ -384,7 +384,7 @@ describe("Encodes/Decodes Block", () => {
       const block = {
         key: "array",
         type: "array",
-        bits: 3,
+        length: 7,
         blocks: {
           key: "array value",
           type: "integer",
@@ -400,11 +400,11 @@ describe("Encodes/Decodes Block", () => {
       const block = {
         key: "array",
         type: "array",
-        bits: 4,
+        length: 15,
         blocks: {
           key: "nested array",
           type: "array",
-          bits: 6,
+          length: 63,
           blocks: {
             key: "array value",
             type: "integer",
@@ -417,6 +417,49 @@ describe("Encodes/Decodes Block", () => {
         [3, 4, 5],
       ];
       const a = "0010000010000001000010000011000011000100000101";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes a fixed array", () => {
+      const block = {
+        key: "array",
+        type: "array",
+        length: 4,
+        fixed: true,
+        blocks: {
+          key: "array value",
+          type: "integer",
+          bits: 6,
+        },
+      };
+      const t = [1, 2, 3, 4];
+      const a = "000001000010000011000100";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.deepEqual(spos.decodeBlock(a, block), t);
+    });
+    it("Encodes/Decodes a nested fixed array", () => {
+      const block = {
+        key: "array",
+        type: "array",
+        length: 2,
+        fixed: true,
+        blocks: {
+          key: "inner array",
+          type: "array",
+          length: 2,
+          fixed: true,
+          blocks: {
+            key: "array value",
+            type: "integer",
+            bits: 6,
+          },
+        },
+      };
+      const t = [
+        [1, 2],
+        [3, 4],
+      ];
+      const a = "000001000010000011000100";
       assert.equal(spos.encodeBlock(t, block), a);
       assert.deepEqual(spos.decodeBlock(a, block), t);
     });
@@ -569,7 +612,7 @@ describe("Encodes/Decodes Block", () => {
           {
             key: "data",
             type: "array",
-            bits: 5,
+            length: 31,
             blocks: {
               key: "catto",
               type: "integer",
@@ -591,7 +634,7 @@ describe("Encodes/Decodes Block", () => {
           {
             key: "data",
             type: "array",
-            bits: 5,
+            length: 31,
             blocks: {
               key: "catto",
               type: "object",
@@ -885,7 +928,7 @@ describe("validate value", () => {
     const block = {
       key: "test",
       type: "array",
-      bits: 6,
+      length: 63,
       blocks: {
         key: "array value",
         type: "boolean",
@@ -1054,13 +1097,13 @@ describe("Encodes/Decodes payloadData", () => {
         {
           key: "confidences",
           type: "array",
-          bits: 8,
+          length: 255,
           blocks: { key: "confidence", type: "float", bits: 4 },
         },
         {
           key: "categories",
           type: "array",
-          bits: 8,
+          length: 255,
           blocks: {
             key: "category",
             type: "categories",
@@ -1114,13 +1157,13 @@ describe("Encodes/Decodes payloadData", () => {
         {
           key: "confidences",
           type: "array",
-          bits: 8,
+          length: 255,
           blocks: { key: "confidence", type: "float", bits: 4 },
         },
         {
           key: "categories",
           type: "array",
-          bits: 8,
+          length: 255,
           blocks: {
             key: "category",
             type: "categories",
@@ -1173,13 +1216,13 @@ describe("Encodes/Decodes payloadData", () => {
         {
           key: "confidences",
           type: "array",
-          bits: 8,
+          length: 255,
           blocks: { key: "confidence", type: "float", bits: 4 },
         },
         {
           key: "categories",
           type: "array",
-          bits: 8,
+          length: 255,
           blocks: {
             key: "category",
             type: "categories",

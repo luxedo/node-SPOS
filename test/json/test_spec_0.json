@@ -20,6 +20,27 @@
       "key": "danger",
       "type": "categories",
       "categories": ["terror", "aliens", "bunny"]
+    },
+    {
+      "key": "super array",
+      "type": "array",
+      "length": 15,
+      "blocks": {
+        "key": "super value",
+        "type": "integer",
+        "bits": 3
+      }
+    },
+    {
+      "key": "mega array",
+      "type": "array",
+      "length": 5,
+      "fixed": true,
+      "blocks": {
+        "key": "super value",
+        "type": "integer",
+        "bits": 3
+      }
     }
   ]
 }
