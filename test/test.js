@@ -819,25 +819,48 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t);
     });
-    it("Encodes/Decodes Categories unknown", () => {
+    it("Encodes/Decodes Categories throws an error when passing a wrong category", () => {
       const block = {
         key: "categories",
         type: "categories",
         categories: ["fighter", "wizard", "rogue"],
       };
       const t = "missing category";
-      const a = "11";
-      const t_dec = "unknown";
-      assert.equal(spos.encodeBlock(t, block), a);
-      assert.equal(spos.decodeBlock(a, block), t_dec);
+      assert.throws(() => spos.encodeBlock(t, block), RangeError);
     });
-    it("Encodes/Decodes Categories error", () => {
+    it("Encodes/Decodes Categories with error string", () => {
       const block = {
         key: "categories",
         type: "categories",
         categories: ["fighter", "wizard", "rogue", "mage"],
+        error: "error",
       };
-      const a = "111";
+      const t = "missing category";
+      const a = "100";
+      const t_dec = "error";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes Categories with error string of an existing value", () => {
+      const block = {
+        key: "categories",
+        type: "categories",
+        categories: ["critical", "low", "charged", "full"],
+        error: "critical",
+      };
+      const t = "invalid";
+      const a = "00";
+      const t_dec = "critical";
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Decodes categories with error value", () => {
+      const block = {
+        key: "categories",
+        type: "categories",
+        categories: ["critical", "low", "charged"],
+      };
+      const a = "11";
       const t_dec = "error";
       assert.equal(spos.decodeBlock(a, block), t_dec);
     });

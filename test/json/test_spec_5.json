@@ -1,0 +1,17 @@
+{
+  "name": "test",
+  "version": 5,
+  "meta": {
+    "encode_version": true,
+    "version_bits": 6,
+    "crc8": true
+  },
+  "body": [
+    {
+      "key": "vaccine",
+      "type": "categories",
+      "categories": ["butanta", "pfizer", "jansen", "coronavac"],
+      "error": "no vaccine :("
+    }
+  ]
+}

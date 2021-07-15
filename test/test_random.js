@@ -35,33 +35,33 @@ const { utils } = require("../spos/utils.js");
 
 const DELTA = 0.1;
 
-assert.arrayCloseTo = (actual, expected, delta = DELTA) => {
-  assert.equal(actual.length, expected.length);
+assert.arrayCloseTo = (actual, expected, delta = DELTA, message = "") => {
+  assert.equal(actual.length, expected.length, message);
   actual.forEach((value, idx) => {
     if (utils.isObject(actual[idx]))
-      assert.objectCloseTo(actual[idx], expected[idx], delta);
+      assert.objectCloseTo(actual[idx], expected[idx], delta, message);
     else if (Array.isArray(actual[idx]))
-      assert.arrayCloseTo(actual[idx], expected[idx], delta);
+      assert.arrayCloseTo(actual[idx], expected[idx], delta, message);
     else if (utils.isString(actual[idx]) || utils.isBoolean(actual[idx]))
-      assert.equal(actual[idx], expected[idx]);
-    else assert.closeTo(actual[idx], expected[idx], delta);
+      assert.equal(actual[idx], expected[idx], message);
+    else assert.closeTo(actual[idx], expected[idx], delta, message);
   });
 };
 
-assert.objectCloseTo = (actual, expected, delta = DELTA) => {
+assert.objectCloseTo = (actual, expected, delta = DELTA, message = "") => {
   let keysA = Object.keys(actual);
   let keysE = Object.keys(expected);
   keysA.sort();
   keysE.sort();
-  assert.deepEqual(keysA, keysE);
+  assert.deepEqual(keysA, keysE, message);
   Object.keys(actual).forEach((key) => {
     if (utils.isObject(actual[key]))
-      assert.objectCloseTo(actual[key], expected[key], delta);
+      assert.objectCloseTo(actual[key], expected[key], delta, message);
     else if (Array.isArray(actual[key]))
-      assert.arrayCloseTo(actual[key], expected[key], delta);
+      assert.arrayCloseTo(actual[key], expected[key], delta, message);
     else if (utils.isString(actual[key]) || utils.isBoolean(actual[key]))
-      assert.equal(actual[key], expected[key]);
-    else assert.closeTo(actual[key], expected[key], delta);
+      assert.equal(actual[key], expected[key], message);
+    else assert.closeTo(actual[key], expected[key], delta, message);
   });
 };
 
@@ -97,7 +97,15 @@ describe("Random payloads tests", () => {
                       payloadSpec,
                       "hex"
                     );
-                    assert.objectCloseTo(decoded, jsDecoded);
+                    assert.objectCloseTo(
+                      decoded,
+                      jsDecoded,
+                      DELTA,
+                      "pyDecoded: \n" +
+                        JSON.stringify(decoded, null, 2) +
+                        "\njsDecoded: \n" +
+                        JSON.stringify(jsDecoded, null, 2)
+                    );
                   }
                 );
               });
@@ -144,7 +152,15 @@ describe("Random decodeFromSpecs tests", () => {
                 payloadSpecs,
                 "hex"
               );
-              assert.objectCloseTo(decoded, jsDecoded);
+              assert.objectCloseTo(
+                decoded,
+                jsDecoded,
+                DELTA,
+                "pyDecoded: \n" +
+                  JSON.stringify(decoded, null, 2) +
+                  "\njsDecoded: \n" +
+                  JSON.stringify(jsDecoded, null, 2)
+              );
               setImmediate(done);
             }
           );

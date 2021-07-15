@@ -501,11 +501,22 @@ class CategoriesBlock extends BlockABC {
   initVariables() {
     this.input = "string";
     this.required = { categories: "array" };
+    this.optional = {
+      error: {
+        type: "string",
+        default: null,
+      },
+    };
   }
 
   initializeBlock(blockSpec) {
-    this.blockSpec.categories.push("unknown");
-    this.bits = Math.ceil(Math.log2(this.blockSpec.categories.length));
+    let length = this.blockSpec.categories.length;
+    length +=
+      !!this.blockSpec.error &&
+      !this.blockSpec.categories.includes(this.blockSpec.error)
+        ? 1
+        : 0;
+    this.bits = Math.ceil(Math.log2(length));
     this.categoriesBlock = new Block({
       key: "categories",
       type: "integer",
@@ -514,14 +525,21 @@ class CategoriesBlock extends BlockABC {
     });
   }
   _binEncode(value) {
-    const index = this.blockSpec.categories.indexOf(value);
-    const _value = index != -1 ? index : this.blockSpec.categories.length - 1;
-    return this.categoriesBlock.binEncode(_value);
+    let index = this.blockSpec.categories.indexOf(value);
+    if (index == -1) {
+      if (this.blockSpec.categories.includes(this.blockSpec.error))
+        index = this.blockSpec.categories.indexOf(this.blockSpec.error);
+      else if (!!this.blockSpec.error) index = this.blockSpec.categories.length;
+      else throw RangeError("Invalid value for category.");
+    }
+    return this.categoriesBlock.binEncode(index);
   }
   _binDecode(message) {
     let value = this.categoriesBlock.binDecode(message);
     return value < this.blockSpec.categories.length
       ? this.blockSpec.categories[value]
+      : value == this.blockSpec.categories.length && !!this.blockSpec.error
+      ? this.blockSpec.error
       : "error";
   }
 }
