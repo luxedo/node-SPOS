@@ -177,12 +177,22 @@ class IntegerBlock extends BlockABC {
     this.required = { bits: "integer" };
     this.optional = {
       offset: { type: "integer", default: 0 },
+      mode: {
+        type: "string",
+        default: "truncate",
+        choices: ["truncate", "remainder"],
+      },
     };
   }
 
   _binEncode(value) {
     const overflow = Math.pow(2, this.bits) - 1;
-    value = Math.min(overflow, Math.max(0, value - this.blockSpec.offset));
+    value -= this.blockSpec.offset;
+    if (this.blockSpec.mode == "remainder") {
+      value %= Math.pow(2, this.blockSpec.bits);
+    } else {
+      value = Math.min(overflow, Math.max(0, value));
+    }
     return value.toString(2).padStart(this.bits, "0");
   }
 

@@ -12,6 +12,12 @@
       "type": "categories",
       "categories": ["butanta", "pfizer", "jansen", "coronavac"],
       "error": "no vaccine :("
+    }, {
+      "key": "bribe",
+      "type": "integer",
+      "mode": "remainder",
+      "bits": 5,
+      "offset": 3
     }
   ]
 }

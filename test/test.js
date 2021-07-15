@@ -220,6 +220,33 @@ describe("Encodes/Decodes Block", () => {
       assert.equal(spos.encodeBlock(t, block), a);
       assert.equal(spos.decodeBlock(a, block), t_dec);
     });
+    it("Encodes/Decodes an integer remainder", () => {
+      const block = {
+        key: "integer remainder",
+        type: "integer",
+        bits: 6,
+        mode: "remainder"
+      };
+      const t = 72;
+      const a = "001000";
+      const t_dec = 8;
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
+    it("Encodes/Decodes an integer remainder with offset", () => {
+      const block = {
+        key: "integer remainder_offset",
+        type: "integer",
+        bits: 3,
+        offset: 3,
+        mode: "remainder"
+      };
+      const t = 22;
+      const a = "011";
+      const t_dec = 6;
+      assert.equal(spos.encodeBlock(t, block), a);
+      assert.equal(spos.decodeBlock(a, block), t_dec);
+    });
   });
   describe("Encodes/Decodes Float", () => {
     it("Encodes/Decodes a float value", () => {
