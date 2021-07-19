@@ -131,6 +131,15 @@ function decode(message, payloadSpec, input = "bytes")
 function decodeFromSpecs(message, payloadSpecs, input = "bytes")
 ```
 
+```javascript
+/*
+ * Validates a payload specification, throwing errors if it is malformed.
+ * @param {payloadSpec} block The block to be validated.
+ * @throws ReferenceError, RangeError
+ */
+function validatePayloadSpec(payloadSpec)
+```
+
 ## License
 
 > MIT License

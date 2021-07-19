@@ -276,3 +276,4 @@ module.exports.encode = encode;
 module.exports.decode = decode;
 module.exports.decodeFromSpecs = decodeFromSpecs;
 module.exports.utils = utils;
+module.exports.validatePayloadSpec = validatePayloadSpec;

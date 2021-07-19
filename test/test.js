@@ -225,7 +225,7 @@ describe("Encodes/Decodes Block", () => {
         key: "integer remainder",
         type: "integer",
         bits: 6,
-        mode: "remainder"
+        mode: "remainder",
       };
       const t = 72;
       const a = "001000";
@@ -239,7 +239,7 @@ describe("Encodes/Decodes Block", () => {
         type: "integer",
         bits: 3,
         offset: 3,
-        mode: "remainder"
+        mode: "remainder",
       };
       const t = 22;
       const a = "011";
