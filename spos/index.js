@@ -137,7 +137,9 @@ function binEncode(payloadData, payloadSpec) {
     message += new blocks.Block({
       key: "header",
       type: "object",
-      blocklist: meta.header.filter((blockSpec) => !blockSpec.value),
+      blocklist: meta.header.filter(
+        (blockSpec) => !blockSpec.hasOwnProperty("value")
+      ),
     }).binEncode(payloadData);
   }
 
