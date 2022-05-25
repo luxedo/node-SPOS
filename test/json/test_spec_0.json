@@ -8,6 +8,7 @@
   "body": [
     {
       "key": "important data",
+      "alias": "different name",
       "type": "integer",
       "bits": 8
     },

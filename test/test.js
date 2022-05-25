@@ -1335,6 +1335,50 @@ describe("Encodes/Decodes payloadData", () => {
       RangeError
     );
   });
+  it("Encodes/Decodes with alias 0", () => {
+    const payloadSpec = {
+      name: "test encode alias 0",
+      version: 1,
+      body: [
+        {
+          key: "my_sensor.read.value",
+          alias: "pressure",
+          type: "float",
+          bits: 10,
+        },
+      ],
+    };
+    const payloadData = { my_sensor: { read: { value: 0.3 } } };
+    const decodedExpected = { pressure: 0.3 };
+    const message = spos.encode(payloadData, payloadSpec);
+    const decoded = spos.decode(message, payloadSpec).body;
+    assert.objectCloseTo(decoded, decodedExpected);
+  });
+  it("Encodes/Decodes with alias 1", () => {
+    const payloadSpec = {
+      name: "test encode alias 1",
+      version: 2,
+      body: [
+        {
+          key: "my_sensor",
+          type: "object",
+          blocklist: [
+            {
+              key: "read.value",
+              alias: "pressure",
+              type: "float",
+              bits: 10,
+            },
+          ],
+        },
+      ],
+    };
+    const payloadData = { my_sensor: { read: { value: 0.3 } } };
+    const decodedExpected = { my_sensor: { pressure: 0.3 } };
+    const message = spos.encode(payloadData, payloadSpec);
+    const decoded = spos.decode(message, payloadSpec);
+    assert.objectCloseTo(decoded.body, decodedExpected);
+  });
 });
 describe("Encodes/Decodes payloadSpec with meta", () => {
   it("Encodes version", () => {

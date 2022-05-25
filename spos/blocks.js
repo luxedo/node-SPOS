@@ -35,9 +35,7 @@ class BlockABC {
 
     this.blockSpec = blockSpec;
     if ("bits" in blockSpec) this.bits = blockSpec.bits;
-    if ("value" in blockSpec) {
-      this.value = blockSpec.value;
-    }
+    if ("value" in blockSpec) this.value = blockSpec.value;
   }
 
   initVariables() {}
@@ -67,7 +65,7 @@ class BlockABC {
         !(
           Object.keys(this.required).includes(key) ||
           Object.keys(this.optional).includes(key) ||
-          ["key", "type", "value"].includes(key)
+          ["key", "type", "value", "alias"].includes(key)
         )
       )
         throw new ReferenceError(
@@ -396,7 +394,11 @@ class ObjectBlock extends BlockABC {
     for (let block of this.blocklist) {
       let v;
       [v, message] = block.consume(message);
-      values[block.blockSpec.key] = v;
+      const alias =
+        "alias" in block.blockSpec
+          ? block.blockSpec.alias
+          : block.blockSpec.key;
+      values[alias] = v;
     }
     return this.removeNull(this.nestObject(values));
   }
