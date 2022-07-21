@@ -8,7 +8,7 @@
     "test": "jest --coverage",
     "random": "mocha test/test_random.js",
     "pretty": "prettier --write \"README.md\" \"spos/**/*.js\" \"test/**/*.js\"",
-    "prepare": "husky install"
+    "prepare": "npx husky install"
   },
   "repository": {
     "type": "git",
